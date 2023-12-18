@@ -32,7 +32,7 @@ class ModelFormConfigurator(forms.Form):
     fields = FieldsField(required=True)
 
     # kwargs
-    title = forms.CharField(max_length=16, required=True)
+    title = forms.CharField(max_length=16)
     subtitle = forms.CharField(max_length=32)
     description = forms.Textarea()
     help_text = forms.Textarea()
