@@ -1,3 +1,6 @@
+import io
+from termcolor import colored
+
 from django import forms
 
 from hypertrek.missions import mission
@@ -34,10 +37,44 @@ def text(form, **configuration):
 
         return f" ({choices})"
 
-    # TODO: Think about passing errors over to for instance text mode. Should that be out-of-band?
-    print("errors: ", repr(form.errors), repr(form.non_field_errors()))
+    with io.StringIO() as buffer:
+        for field in form:
+            # Header: Field label in yellow
+            buffer.write(colored(f"{field.label}\n", 'yellow', attrs=['bold']))
 
-    return "\n".join(f"{name}: {form[name].label}{choices(form.fields[name])}" for name in form.fields)
+            # Print field errors in red
+            if field.errors:
+                for error in field.errors:
+                    buffer.write(colored(f"Error: {error}\n", 'red'))
+
+            # Representation of the field type
+            field_type = field.field.__class__.__name__
+            buffer.write(f"Type: {field_type}\n")
+
+            # Display current value of the field
+            current_value = field.value()
+            if current_value is not None:
+                if hasattr(field.field, 'choices'):
+                    # For fields with choices, display the readable choice
+                    readable_value = dict(field.field.choices).get(current_value, current_value)
+                    buffer.write(f"Current Value: {readable_value} (raw: {current_value})\n")
+                else:
+                    buffer.write(f"Current Value: {current_value}\n")
+
+            # Display choices for fields like ChoiceField
+            if hasattr(field.field, 'choices'):
+                choices = field.field.choices
+                buffer.write("Options:\n")
+                for value, label in choices:
+                    buffer.write(f"  {value}: {label}\n")
+
+            # Print help text in grey
+            if field.help_text:
+                buffer.write(colored(f"Help: {field.help_text}\n", 'grey'))
+
+            buffer.write("\n")  # Add a newline for separation between fields
+
+        return buffer.getvalue()
 
 def html(*t, **tt):
     return "<p></p>"
@@ -47,8 +84,9 @@ def docs(*t, **tt):
 
 @mission(renderers=d(html=html, text=text, docs=docs), configurator=FormConfigurator)
 def form(form_class, /, *, state, inpt, fields="__all__", renderers=("html", "text", "docs"), **configuration):
-    form_ = form_class(data=inpt)
-    if form_.is_valid():
+    form_ = form_class(data=inpt if inpt else None)
+    if inpt and form_.is_valid():
+        print("vALIDININIENIGNIENG")
         command = trek.CONTINUE
         state.update(form_.cleaned_data)
     else:
