@@ -26,8 +26,18 @@ class FormConfigurator(forms.Form):
         }
 
 def text(form, **configuration):
-    for field in form.fields:
-        print(field)
+    def choices(field):
+        if not hasattr(field, "choices"):
+            return ""
+
+        choices = ", ".join(f"{a}={b}" for a, b in field.choices)
+
+        return f" ({choices})"
+
+    # TODO: Think about passing errors over to for instance text mode. Should that be out-of-band?
+    print("errors: ", repr(form.errors), repr(form.non_field_errors()))
+
+    return "\n".join(f"{name}: {form[name].label}{choices(form.fields[name])}" for name in form.fields)
 
 def html(*t, **tt):
     return "<p></p>"

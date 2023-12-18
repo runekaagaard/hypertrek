@@ -13,6 +13,7 @@ django.setup()
 class PocForm(forms.Form):
     name = forms.CharField(max_length=4, label="What's your name?")
     description = forms.CharField(widget=forms.Textarea, label="Write a few words about yourself ...")
+    options = forms.ChoiceField(choices=[("a", "A"), ("b", "B"), ("c", "C")], label="Which one?")
 
 def poc_trek():
     return [
@@ -21,9 +22,20 @@ def poc_trek():
 
 def fill_poc_trek():
     state = None
+    command = trek.CONTINUE
+    inpt = {}
     while True:
-        state = trek.forward(poc_trek, state=state)
-        print(state)
-        break
+        command, state, side_effects = trek.forward(poc_trek, state=state, inpt=inpt)
+        if command == trek.TERMINATED:
+            break
+        text = side_effects["renders"]["text"]
+        print(text, "\n")
+
+        for line in text.strip().splitlines():
+            k = line.split(':')[0]
+            v = input(f"Please enter {k} and press enter:\n").strip()
+            if v.isdigit():
+                v = int(v)
+            inpt[k] = v
 
 fill_poc_trek()
