@@ -5,6 +5,8 @@ def forward(trek, state=None, inpt=None):
 
     if state is None:
         state = {"mission_index": 0}
+    if "mission_index" not in state:
+        state["mission_index"] = 0
 
     command, state, side_effects = missions[state["mission_index"]](state=state, inpt=inpt)
 

@@ -32,7 +32,7 @@ def text(form):
     with io.StringIO() as buffer:
         # Display non-field errors at the top
         if form.non_field_errors():
-            buffer.write(colored("Form errors:\n", 'white', attrs=['bold']))
+            buffer.write(colored("Form errors:\n", 'white'))
             for error in form.non_field_errors():
                 buffer.write(colored(f"  - {error}\n", 'red'))
 
@@ -41,7 +41,7 @@ def text(form):
         # Summarize field errors at the top
         field_errors = [colored(field.name, 'red') for field in form if field.errors]
         if field_errors:
-            buffer.write(colored("Field errors: ", 'white', attrs=['bold']) + ', '.join(field_errors) + "\n")
+            buffer.write(colored("Field errors: ", 'white') + ', '.join(field_errors) + "\n")
             buffer.write("\n")
 
         for i, field in enumerate(form, start=1):

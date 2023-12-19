@@ -1,7 +1,10 @@
+d = dict
+
 from enum import CONFORM
 import os, re, json
 
 from django.test.testcases import ValidationError
+from hypertrek.missions import mission
 
 from hypertrek import missions as ms
 from hypertrek import trek
@@ -11,6 +14,29 @@ from django import forms
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'example_project.settings')
 django.setup()
+
+BOOKINGS = [
+    [1, 2, 3, 4, 5, 7, 7],
+    [9, 10, 11, 12, 13, 14, 15, 18],
+]
+
+def render_booking(**configuration):
+    return """
+details: name=bogus
+value: NOPE
+---
+    
+    """
+
+@mission(renderers=d(text=render_booking), configurator=None)
+def booking(*, state, inpt, renderers=("text",), **configuration):
+    if inpt:
+        command = trek.CONTINUE
+        state["booking"] = inpt
+    else:
+        command = trek.RETRY
+
+    return command, state, d(renders={x: booking.hypertrek["renderers"][x](**configuration) for x in renderers})
 
 class PocForm(forms.Form):
     name = forms.CharField(max_length=16, label="What's your name?", help_text="Please enter your name.")
@@ -27,10 +53,11 @@ def poc_trek():
     return [
         ms.form.form(PocForm, fields=["name", "description"]),
         ms.form.form(PocForm, fields=["options"]),
+        booking(),
     ]
 
 def fill_poc_trek():
-    state = None
+    state = {"name": "ok", "description": "hmm"}
     command = trek.CONTINUE
     inpt = {}
     while True:
