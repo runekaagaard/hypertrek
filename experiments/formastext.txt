@@ -1,0 +1,23 @@
+1. What's your name
+===================
+
+details: type=CharField | key=name | name=name | placeholder="Write your name" | id="id_name" | class="pretty"
+help_text: Remember to spell your name correctly!
+errors:
+  - Remember to do it
+  - This is required!
+current value: "John Allan"
+new value: 
+
+2. Choose wisely
+================
+
+[same fields]
+choices:
+  1. Old
+  2. New
+  3. Super New
+  ... [501 more choices]
+  505: Sparkling new!
+current value: 3. Super new
+new value: 

@@ -28,51 +28,70 @@ class FormConfigurator(forms.Form):
             for x in ("title", "subtitle", "description", "help_text", "template", "fields")
         }
 
-def text(form, **configuration):
-    def choices(field):
-        if not hasattr(field, "choices"):
-            return ""
-
-        choices = ", ".join(f"{a}={b}" for a, b in field.choices)
-
-        return f" ({choices})"
-
+def text(form):
     with io.StringIO() as buffer:
-        for field in form:
-            # Header: Field label in yellow
-            buffer.write(colored(f"{field.label}\n", 'yellow', attrs=['bold']))
+        # Display non-field errors at the top
+        if form.non_field_errors():
+            buffer.write(colored("Form errors:\n", 'white', attrs=['bold']))
+            for error in form.non_field_errors():
+                buffer.write(colored(f"  - {error}\n", 'red'))
 
-            # Print field errors in red
-            if field.errors:
-                for error in field.errors:
-                    buffer.write(colored(f"Error: {error}\n", 'red'))
+            buffer.write("\n")
 
-            # Representation of the field type
-            field_type = field.field.__class__.__name__
-            buffer.write(f"Type: {field_type}\n")
+        # Summarize field errors at the top
+        field_errors = [colored(field.name, 'red') for field in form if field.errors]
+        if field_errors:
+            buffer.write(colored("Field errors: ", 'white', attrs=['bold']) + ', '.join(field_errors) + "\n")
+            buffer.write("\n")
 
-            # Display current value of the field
-            current_value = field.value()
-            if current_value is not None:
-                if hasattr(field.field, 'choices'):
-                    # For fields with choices, display the readable choice
-                    readable_value = dict(field.field.choices).get(current_value, current_value)
-                    buffer.write(f"Current Value: {readable_value} (raw: {current_value})\n")
-                else:
-                    buffer.write(f"Current Value: {current_value}\n")
+        for i, field in enumerate(form, start=1):
+            # Field header (label) in bold yellow
+            buffer.write(colored(f"{i}. {field.label}\n", 'yellow', attrs=['bold']))
 
-            # Display choices for fields like ChoiceField
+            # Field details
+            field_details = [
+                colored("key=", 'white') + colored(f"{field.name}", 'cyan'),
+                colored("type=", 'white') + colored(f"{field.field.__class__.__name__}", 'cyan'),
+                colored("widget=", 'white') + colored(f"{field.field.widget.__class__.__name__}", 'cyan'),
+                colored("name=", 'white') + colored(f"{field.html_name}", 'cyan'),
+                colored('placeholder="', 'white') +
+                colored(f"{field.field.widget.attrs.get('placeholder', '')}", 'cyan') + colored('"', 'white'),
+                colored('id="', 'white') + colored(f"{field.auto_id}", 'cyan') + colored('"', 'white'),
+                colored('class="', 'white') + colored(f"{field.field.widget.attrs.get('class', '')}", 'cyan') +
+                colored('"', 'white')
+            ]
+            buffer.write("details: " + ' | '.join(field_details) + "\n")
+
+            # "help_text" key in white, help text in grey
+            if field.help_text:
+                buffer.write(colored("help_text: ", 'white') + colored(f"{field.help_text}\n", 'grey'))
+
+            # Choices for ChoiceField
             if hasattr(field.field, 'choices'):
                 choices = field.field.choices
-                buffer.write("Options:\n")
-                for value, label in choices:
+                buffer.write("choices:\n")
+                for idx, (value, label) in enumerate(choices, start=1):
+                    if idx == 7:  # Limit display to 8 choices
+                        buffer.write(f"  ... [{len(choices) - 7} more choices]\n")
+                        break
                     buffer.write(f"  {value}: {label}\n")
+                if len(choices) > 505:
+                    buffer.write(f"  {choices[-1][0]}: {choices[-1][1]}\n")
 
-            # Print help text in grey
-            if field.help_text:
-                buffer.write(colored(f"Help: {field.help_text}\n", 'grey'))
+            # Errors in red
+            if field.errors:
+                buffer.write(colored("errors:\n", 'white'))
+                for error in field.errors:
+                    buffer.write(colored(f"  - {error}\n", 'red'))
 
-            buffer.write("\n")  # Add a newline for separation between fields
+            # Current value
+            current_value = field.value() if field.value() is not None else ""
+            buffer.write(f"current value: \"{current_value}\"\n")
+            buffer.write("---\n")
+
+            # Only a single empty line between fields
+            if i < len(form.fields):
+                buffer.write("\n")
 
         return buffer.getvalue()
 
@@ -82,11 +101,20 @@ def html(*t, **tt):
 def docs(*t, **tt):
     return "### docs"
 
+def form_factory(form_class, fields):
+    class FormFactory(form_class):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+            self.fields = {k: v for k, v in self.fields.items() if k in fields}
+
+    return FormFactory  # Todo: rename to fit form_class
+
 @mission(renderers=d(html=html, text=text, docs=docs), configurator=FormConfigurator)
-def form(form_class, /, *, state, inpt, fields="__all__", renderers=("html", "text", "docs"), **configuration):
+def form(form_class, /, *, state, inpt, fields=None, renderers=("html", "text", "docs"), **configuration):
+    form_class = form_class if fields is None else form_factory(form_class, fields)
     form_ = form_class(data=inpt if inpt else None)
     if inpt and form_.is_valid():
-        print("vALIDININIENIGNIENG")
         command = trek.CONTINUE
         state.update(form_.cleaned_data)
     else:
