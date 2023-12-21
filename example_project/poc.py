@@ -8,6 +8,7 @@ from hypertrek.missions import mission
 
 from hypertrek import missions as ms
 from hypertrek import trek
+from hypertrek.prompt import prompt_value
 
 import django
 from django import forms
@@ -16,17 +17,19 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'example_project.settings')
 django.setup()
 
 BOOKINGS = [
-    [1, 2, 3, 4, 5, 7, 7],
-    [9, 10, 11, 12, 13, 14, 15, 18],
+    [(x, str(x)) for x in [1, 2, 3, 4, 5, 7, 7]],
+    [(x, str(x)) for x in [9, 10, 11, 12, 13, 14, 15, 18]],
 ]
 
 def render_booking(**configuration):
-    return """
-details: name=bogus
-value: NOPE
----
-    
-    """
+    def _():
+        result = []
+        result.append(prompt_value("date", "", value_type=int, choices=BOOKINGS[0], required=True))
+        result.append(prompt_value("time", "", value_type=int, choices=BOOKINGS[1], required=True))
+
+        return result
+
+    return _
 
 @mission(renderers=d(text=render_booking), configurator=None)
 def booking(*, state, inpt, renderers=("text",), **configuration):
@@ -75,18 +78,7 @@ def fill_poc_trek():
         print("=" * len(title))
         print()
 
-        text = side_effects["renders"]["text"]
-        for section in text.strip().split("\n---\n\n"):
-            ansi_escape = re.compile(r'\x1b\[.*?m')
-            clean_text = ansi_escape.sub('', section)
-            pattern = r"details:.*?\bname=([^\s]+)"
-            k = re.search(pattern, clean_text, re.MULTILINE).group(1)
-
-            print(section)
-            v = input(f"new value (or - for current): ").strip()
-            if v != "-":
-                inpt[k] = int(v) if v.isdigit() else v
-            print()
+        inpt = side_effects["renders"]["text"]()
 
     os.system('clear')
 
