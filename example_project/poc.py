@@ -47,8 +47,12 @@ class PocForm(forms.Form):
                                   help_text="Dont' be shy!")
     options = forms.ChoiceField(choices=[("a", "A"), ("b", "B"), ("c", "C")], label="Which one?",
                                 help_text="Choose one, god dammit!")
+    num_int = forms.IntegerField()
+    num_float = forms.FloatField()
 
     def clean(self):
+        if self.cleaned_data.get("name", None) == "jeppe":
+            raise ValidationError("I don't think so!")
         if self.cleaned_data.get("options", None) == "b":
             raise ValidationError("NEVER choose b!")
 
@@ -57,14 +61,37 @@ def poc_trek():
         ms.form.form(PocForm, fields=["name", "description"]),
         ms.form.form(PocForm, fields=["options"]),
         booking(),
+        ms.form.form(PocForm, fields=["num_int", "num_float"]),
     ]
 
+def log(inpt, state, command):
+    msg = f"""
+Input
+=====
+
+{json.dumps(inpt, indent=4)}
+
+Command
+=======
+
+{command}
+    
+State
+=====
+
+{json.dumps(state, indent=4)}
+    """.strip()
+
+    with open("/tmp/hypertrek.log", "w") as f:
+        f.write(msg)
+
 def fill_poc_trek():
-    state = {"name": "ok", "description": "hmm"}
+    state = {}
     command = trek.CONTINUE
     inpt = {}
     while True:
         command, state, side_effects = trek.forward(poc_trek, state=state, inpt=inpt)
+        log(inpt, state, command)
         if command == trek.TERMINATED:
             break
         elif command == trek.CONTINUE:

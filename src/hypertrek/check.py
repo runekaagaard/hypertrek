@@ -1,18 +1,43 @@
-from prompt_toolkit import prompt
-from prompt_toolkit.completion import WordCompleter
-from prompt_toolkit.validation import Validator, ValidationError
+from prompt_toolkit import Application
+from prompt_toolkit.buffer import Buffer
+from prompt_toolkit.layout import Layout, HSplit, VSplit, Window
+from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
+from prompt_toolkit.widgets import Frame
+from prompt_toolkit.key_binding import KeyBindings
 
-# Example completer
-color_completer = WordCompleter(['red', 'green', 'blue', 'yellow'], ignore_case=True)
+# Function to return sidebar content
+def get_sidebar_content():
+    return [
+        ('class:sidebar', 'Global State:\n'),
+        ('class:sidebar', ' - State Info 1\n'),
+        ('class:sidebar', ' - State Info 2\n'),
+        ('class:sidebar', 'Current Input:\n'),
+        ('class:sidebar', '\n')  # Placeholder for current input
+    ]
 
-# Example validator
-class ColorValidator(Validator):
-    def validate(self, document):
-        text = document.text
-        if text not in ['red', 'green', 'blue', 'yellow']:
-            raise ValidationError(message="This input is not a valid color", cursor_position=len(text))
+# Creating the main buffer and input area
+main_buffer = Buffer()
+input_area = Window(BufferControl(buffer=main_buffer))
 
-# Using prompt with validator and completer
-user_input = prompt("Enter a color: ", validator=ColorValidator(), completer=color_completer)
+# Creating the sidebar
+sidebar_content = FormattedTextControl(get_sidebar_content)
+sidebar = Window(content=sidebar_content, width=30)
 
-print("You entered:", user_input)
+# Key bindings for the application
+kb = KeyBindings()
+
+@kb.add('c-c')
+@kb.add('c-q')
+def exit_(event):
+    event.app.exit()
+
+# Layout
+layout = Layout(HSplit([VSplit([Frame(input_area), sidebar])]))
+
+# Application
+application = Application(layout=layout, key_bindings=kb, full_screen=True)
+
+def run():
+    application.run()
+
+run()
