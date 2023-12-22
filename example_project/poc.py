@@ -23,11 +23,14 @@ BOOKINGS = [
 
 def render_booking(**configuration):
     def _():
-        result = []
-        result.append(prompt_value("date", "", value_type=int, choices=BOOKINGS[0], required=True))
-        result.append(prompt_value("time", "", value_type=int, choices=BOOKINGS[1], required=True))
+        direction_change, value1 = prompt_value("date", "", value_type=int, choices=BOOKINGS[0], required=True)
+        if direction_change:
+            return direction_change, None
+        direction_change, value2 = prompt_value("time", "", value_type=int, choices=BOOKINGS[1], required=True)
+        if direction_change:
+            return direction_change, None
 
-        return result
+        return None, [value1, value2]
 
     return _
 
@@ -64,9 +67,11 @@ def poc_trek():
         ms.form.form(PocForm, fields=["num_int", "num_float"]),
     ]
 
-def log(inpt, state, command, i):
+def log(inpt, state, command, i, direction_change):
     msg = f"""
 i == {i}
+command = {command}
+direction_change = {direction_change}
     
 Input
 =====
@@ -92,10 +97,17 @@ def fill_poc_trek():
     command = trek.CONTINUE
     inpt = {}
     i = 0
+    direction_change = None
     while True:
         i += 1
-        command, state, side_effects = trek.forward(poc_trek, state=state, inpt=inpt)
-        log(inpt, state, command, i)
+        if direction_change is None:
+            command, state, side_effects = trek.forward(poc_trek, state=state, inpt=inpt)
+        elif direction_change == trek.BACKWARD:
+            command, state, side_effects = trek.backward(poc_trek, state=state)
+            direction_change = None
+        else:
+            raise Exception(f"TODO: {direction_change}")
+        log(inpt, state, command, i, direction_change)
         if command == trek.TERMINATED:
             break
         elif command == trek.CONTINUE:
@@ -110,7 +122,7 @@ def fill_poc_trek():
         print()
 
         direction_change, inpt = side_effects["renders"]["text"]()
-        assert direction_change is None, "TODO: handle."
+        log(inpt, state, command, i, direction_change)
 
     os.system('clear')
 

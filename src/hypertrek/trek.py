@@ -19,5 +19,7 @@ def forward(trek, state=None, inpt=None):
 
     return command, state, side_effects
 
-def backward(trek):
-    pass
+def backward(trek, state):
+    state["mission_index"] = max(state["mission_index"] - 1, 0)
+
+    return CONTINUE, state, None
