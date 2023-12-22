@@ -1,4 +1,5 @@
 CONTINUE, RETRY, TERMINATED = "CONTINUE", "RETRY", "TERMINATED"
+FORWARD, BACKWARD = "FORWARD", "BACKWARD"
 
 def forward(trek, state=None, inpt=None):
     missions = trek()

@@ -7,12 +7,26 @@ from prompt_toolkit.shortcuts import PromptSession
 from prompt_toolkit.validation import ValidationError as PTValidationError, Validator
 from termcolor import colored
 from prompt_toolkit import print_formatted_text, ANSI
+from prompt_toolkit.application import run_in_terminal
+from prompt_toolkit.application.current import get_app
 
 from django import forms
 from django.forms import ValidationError
 
+from hypertrek.trek import BACKWARD, FORWARD
+
 def cprint(txt):
     return print_formatted_text(ANSI(txt))
+
+bindings = KeyBindings()
+
+@bindings.add('c-f')
+def forward(event):
+    event.app.exit(exception=EOFError(FORWARD), style='class:aborting')
+
+@bindings.add('c-b')
+def backward(event):
+    event.app.exit(exception=EOFError(BACKWARD), style='class:aborting')
 
 def prompt_value(label, default=None, value_type=str, max_length=None, multiline=False, choices=None, session=None,
                  errors=None, required=False):
@@ -49,9 +63,18 @@ def prompt_value(label, default=None, value_type=str, max_length=None, multiline
     if choices:
         completer = FuzzyWordCompleter([f"{k}: {v}" for k, v in choices])
 
-    return value_type(
-        prmpt(ANSI(prompt_text), validator=Validate(), multiline=multiline, mouse_support=True, default=default,
-              completer=completer))
+    try:
+        return None, value_type(
+            prmpt(ANSI(prompt_text), validator=Validate(), multiline=multiline, mouse_support=True,
+                  default=default, completer=completer, key_bindings=bindings))
+    except EOFError as e:
+        match str(e):
+            case "FORWARD":
+                return FORWARD, None
+            case "BACKWARD":
+                return BACKWARD, None
+            case _:
+                raise Exception("Unknown EOFError")
 
 def prompt_field(form, field_name):
     field = form.fields[field_name]
@@ -90,9 +113,12 @@ def prompt_form(form):
 
     result = {}
     for field_name in form.fields.keys():
-        result[field_name] = prompt_field(form, field_name)
+        direction_change, value = prompt_field(form, field_name)
+        result[field_name] = value
+        if direction_change is not None:
+            return direction_change, result
 
-    return result
+    return None, result
 
 # import django
 # from django import forms

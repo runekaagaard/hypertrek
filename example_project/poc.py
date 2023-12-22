@@ -64,8 +64,10 @@ def poc_trek():
         ms.form.form(PocForm, fields=["num_int", "num_float"]),
     ]
 
-def log(inpt, state, command):
+def log(inpt, state, command, i):
     msg = f"""
+i == {i}
+    
 Input
 =====
 
@@ -89,9 +91,11 @@ def fill_poc_trek():
     state = {}
     command = trek.CONTINUE
     inpt = {}
+    i = 0
     while True:
+        i += 1
         command, state, side_effects = trek.forward(poc_trek, state=state, inpt=inpt)
-        log(inpt, state, command)
+        log(inpt, state, command, i)
         if command == trek.TERMINATED:
             break
         elif command == trek.CONTINUE:
@@ -105,7 +109,8 @@ def fill_poc_trek():
         print("=" * len(title))
         print()
 
-        inpt = side_effects["renders"]["text"]()
+        direction_change, inpt = side_effects["renders"]["text"]()
+        assert direction_change is None, "TODO: handle."
 
     os.system('clear')
 
