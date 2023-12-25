@@ -1,25 +1,22 @@
 CONTINUE, RETRY, TERMINATED = "CONTINUE", "RETRY", "TERMINATED"
 FORWARD, BACKWARD = "FORWARD", "BACKWARD"
 
+def init(trek):
+    return trek(), {"mission_index": 0}
+
+def execute(trek, state, inpt=None):
+    if inpt is None:
+        inpt = {}
+    return trek[state["mission_index"]](state=state, inpt=inpt)
+
 def forward(trek, state=None, inpt=None):
-    missions = trek()
-
-    if state is None:
-        state = {"mission_index": 0}
-    if "mission_index" not in state:
-        state["mission_index"] = 0
-
-    command, state, side_effects = missions[state["mission_index"]](state=state, inpt=inpt)
-
-    if command == CONTINUE:
+    if state["mission_index"] + 1 > len(trek) - 1:
+        return True, state
+    else:
         state["mission_index"] += 1
-
-    if state["mission_index"] > len(missions) - 1:
-        command = TERMINATED
-
-    return command, state, side_effects
+        return False, state
 
 def backward(trek, state):
     state["mission_index"] = max(state["mission_index"] - 1, 0)
 
-    return CONTINUE, state, None
+    return False, state

@@ -24,8 +24,7 @@ class FormConfigurator(forms.Form):
 
     def mission_kwargs(self):
         return {
-            x: self.cleaned_data[x]
-            for x in ("title", "subtitle", "description", "help_text", "template", "fields")
+            x: self.cleaned_data[x] for x in ("title", "subtitle", "description", "help_text", "template", "fields")
         }
 
 def text(form):
@@ -50,11 +49,7 @@ def form_factory(form_class, fields):
 @mission(renderers=d(html=html, text=text, docs=docs), configurator=FormConfigurator)
 def form(form_class, /, *, state, inpt, fields=None, renderers=("html", "text", "docs"), **configuration):
     form_class = form_class if fields is None else form_factory(form_class, fields)
-    data = {}
-    for field in fields:
-        value = inpt.get(field, state.get(field))
-        if value:
-            data[field] = value
+    data = {x: inpt.get(x, state.get(x)) for x in fields}
 
     if inpt:
         form_ = form_class(data=data if data else None)
@@ -66,5 +61,4 @@ def form(form_class, /, *, state, inpt, fields=None, renderers=("html", "text", 
     else:
         command = trek.RETRY
 
-    return command, state, d(
-        renders={x: form.hypertrek["renderers"][x](form_, **configuration) for x in renderers})
+    return command, state, d(renders={x: form.hypertrek["renderers"][x](form_, **configuration) for x in renderers})

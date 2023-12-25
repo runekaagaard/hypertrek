@@ -93,41 +93,42 @@ State
         f.write(msg)
 
 def fill_poc_trek():
-    state = {}
-    command = trek.CONTINUE
-    inpt = {}
+    thetrek, state = trek.init(poc_trek)
+    is_done = False
+
     i = 0
-    direction_change = None
-    while True:
-        i += 1
-        if direction_change is None:
-            command, state, side_effects = trek.forward(poc_trek, state=state, inpt=inpt)
-        elif direction_change == trek.BACKWARD:
-            command, state, side_effects = trek.backward(poc_trek, state=state)
-            direction_change = None
-        elif direction_change == trek.FORWARD:
-            command, state, side_effects = trek.forward(poc_trek, state=state, inpt=inpt)
-            direction_change = None
-        else:
-            raise Exception(f"TODO: {direction_change}")
-        log(inpt, state, command, i, direction_change)
-        if command == trek.TERMINATED:
-            break
-        elif command == trek.CONTINUE:
-            inpt = {}
-            continue
+    while is_done is False:
+        inpt, direction_change = {}, None
+        while True:
+            os.system('clear')
 
-        os.system('clear')
+            title = f"Mission: {state['mission_index']}"
+            print(title)
+            print("=" * len(title))
+            print()
 
-        title = f"Mission: {state['mission_index']}"
-        print(title)
-        print("=" * len(title))
-        print()
+            i += 1
+            # Display page
+            cmd, state, concerns = trek.execute(thetrek, state, inpt)
+            log(inpt, state, cmd, i, direction_change)
+            direction_change, inpt = concerns["renders"]["text"]()
 
-        direction_change, inpt = side_effects["renders"]["text"]()
-        log(inpt, state, command, i, direction_change)
+            # Validate input
+            cmd, state, concerns = trek.execute(thetrek, state, inpt)
+            log(inpt, state, cmd, i, direction_change)
 
-    os.system('clear')
+            if direction_change == trek.BACKWARD:
+                direction = trek.backward
+                break
+            else:
+                if direction_change == trek.FORWARD:
+                    # When skipping forward, validate with state as input.
+                    cmd, state, concerns = trek.execute(thetrek, state, state)
+                if cmd == trek.CONTINUE:
+                    direction = trek.forward
+                    break
+
+        is_done, state = direction(thetrek, state)
 
     title = f"Trek completed"
     print(title)
