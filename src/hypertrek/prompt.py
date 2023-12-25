@@ -111,12 +111,22 @@ def prompt_form(form):
 
         print()
 
+    for field_name in form.fields.keys():
+        if form.is_bound:
+            default = form[field_name].field.bound_data(form[field_name].data, form.initial.get(field_name))
+        else:
+            default = form.initial.get(field_name)
+
+        print(colored(f"{field_name}: "), default)
+
+    print()
+
     result = {}
     for field_name in form.fields.keys():
         direction_change, value = prompt_field(form, field_name)
-        result[field_name] = value
         if direction_change is not None:
             return direction_change, result
+        result[field_name] = value
 
     return None, result
 

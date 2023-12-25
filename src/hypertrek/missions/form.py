@@ -50,8 +50,17 @@ def form_factory(form_class, fields):
 @mission(renderers=d(html=html, text=text, docs=docs), configurator=FormConfigurator)
 def form(form_class, /, *, state, inpt, fields=None, renderers=("html", "text", "docs"), **configuration):
     form_class = form_class if fields is None else form_factory(form_class, fields)
-    form_ = form_class(data=inpt if inpt else None)
-    if inpt and form_.is_valid():
+    data = {}
+    for field in fields:
+        value = inpt.get(field, state.get(field))
+        if value:
+            data[field] = value
+
+    if inpt:
+        form_ = form_class(data=data if data else None)
+    else:
+        form_ = form_class(initial=data if data else None)
+    if data and form_.is_valid():
         command = trek.CONTINUE
         state.update(form_.cleaned_data)
     else:

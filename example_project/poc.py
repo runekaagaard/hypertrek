@@ -105,6 +105,9 @@ def fill_poc_trek():
         elif direction_change == trek.BACKWARD:
             command, state, side_effects = trek.backward(poc_trek, state=state)
             direction_change = None
+        elif direction_change == trek.FORWARD:
+            command, state, side_effects = trek.forward(poc_trek, state=state, inpt=inpt)
+            direction_change = None
         else:
             raise Exception(f"TODO: {direction_change}")
         log(inpt, state, command, i, direction_change)
