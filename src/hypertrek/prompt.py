@@ -28,7 +28,7 @@ def forward(event):
 def backward(event):
     event.app.exit(exception=EOFError(BACKWARD), style='class:aborting')
 
-def prompt_value(label, default=None, value_type=str, max_length=None, multiline=False, choices=None, session=None,
+def prompt_value(label, default="", value_type=str, max_length=None, multiline=False, choices=None, session=None,
                  errors=None, required=False):
     class Validate(Validator):
         def validate(self, document):
@@ -66,7 +66,7 @@ def prompt_value(label, default=None, value_type=str, max_length=None, multiline
     try:
         return None, value_type(
             prmpt(ANSI(prompt_text), validator=Validate(), multiline=multiline, mouse_support=True,
-                  default=default, completer=completer, key_bindings=bindings))
+                  default=str(default) if default else "", completer=completer, key_bindings=bindings))
     except EOFError as e:
         match str(e):
             case "FORWARD":

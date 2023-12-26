@@ -12,7 +12,6 @@ def mission(*, concerns, configurator, pageno):
         @curry
         @wraps(f)
         def __(*args, **kwargs):
-            f.hypertrek = hypertrek
             return f(*args, **kwargs)
 
         __.hypertrek = hypertrek

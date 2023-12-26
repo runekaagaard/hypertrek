@@ -1,10 +1,8 @@
 d = dict
 
-import os, re
+import os, re, calendar
 
 from hypergen.imports import dumps
-
-from django.test.testcases import ValidationError
 
 from hypertrek.missions import mission
 from hypertrek import missions as ms
@@ -13,41 +11,84 @@ from hypertrek.prompt import prompt_value
 
 import django
 from django import forms
+from django.core.exceptions import ValidationError
+
+from termcolor import colored
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'example_project.settings')
 django.setup()
 
 BOOKINGS = [
-    [(x, str(x)) for x in [1, 2, 3, 4, 5, 7, 7]],
-    [(x, str(x)) for x in [9, 10, 11, 12, 13, 14, 15, 18]],
+    [(i, calendar.month_name[i]) for i in range(1, 13)],
+    [(x, str(x)) for x in range(0, 30)],
+    [(x, f"{x}:00-{x+1}:00") for x in range(9, 18)],
 ]
 
-def booking_text(**configuration):
+def booking_text(data, errors, **configuration):
     def _():
-        direction_change, value1 = prompt_value("date", "", value_type=int, choices=BOOKINGS[0], required=True)
-        if direction_change:
-            return direction_change, None
-        direction_change, value2 = prompt_value("time", "", value_type=int, choices=BOOKINGS[1], required=True)
-        if direction_change:
-            return direction_change, None
+        if errors:
+            for error in errors:
+                print(colored(f"- {error}", 'red'))
+            print()
+        if data:
+            for k, v in data.items():
+                print(f"{k}: {v}")
+            print()
 
-        return None, [value1, value2]
+        direction_change, value1 = prompt_value("month", data.get("month"), value_type=int, choices=BOOKINGS[0],
+                                                required=True)
+        if direction_change:
+            return direction_change, None
+        direction_change, value2 = prompt_value("date", data.get("date"), value_type=int, choices=BOOKINGS[1],
+                                                required=True)
+        if direction_change:
+            return direction_change, None
+        direction_change, value3 = prompt_value("time", data.get("time"), value_type=int, choices=BOOKINGS[2],
+                                                required=True)
+        if direction_change:
+            return direction_change, None
+        if value3 > 16:
+            direction_change, value4 = prompt_value("Is it OK it's late?", data.get("late_ok"), value_type=int,
+                                                    choices=((0, "Nope!"), (1, "Yep!")), required=True)
+            value4 = bool(value4)
+            if direction_change:
+                return direction_change, None
+        else:
+            value4 = None
+
+        return None, {"month": value1, "date": value2, "time": value3, "late_ok": value4}
 
     return _
 
 def booking_pageno(state):
-    return (3, 4)
+    try:
+        if state["booking"]["time"] > 16:
+            return (4, 4)
+        else:
+            return (3, 3)
+    except KeyError:
+        return (3, 4)
 
 @mission(concerns=d(rendering=d(text=booking_text)), configurator=None, pageno=booking_pageno)
-def booking(*, state, inpt, **configuration):
-    if inpt:
-        command = trek.CONTINUE
-        state["booking"] = inpt
-    else:
-        command = trek.RETRY
+def booking(*, state, inpt, first, **configuration):
+    if inpt is None:
+        inpt = {}
+
+    errors = []
+
+    command = trek.RETRY
+    if not first and inpt:
+        if inpt.get("late_ok", None) is False:
+            errors.append("Choose an earlier time then!")
+        else:
+            command = trek.CONTINUE
+            state["booking"] = inpt
 
     concerns = booking.hypertrek["concerns"].copy()
-    concerns["rendering"] = {k: v(**configuration) for k, v in concerns["rendering"].items()}
+    concerns["rendering"] = {
+        k: v(inpt if inpt else state.get("booking", {}), errors, **configuration)
+        for k, v in concerns["rendering"].items()
+    }
 
     return command, state, concerns
 
