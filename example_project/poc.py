@@ -1,11 +1,12 @@
 d = dict
 
-from enum import CONFORM
-import os, re, json
+import os, re
+
+from hypergen.imports import dumps
 
 from django.test.testcases import ValidationError
-from hypertrek.missions import mission
 
+from hypertrek.missions import mission
 from hypertrek import missions as ms
 from hypertrek import trek
 from hypertrek.prompt import prompt_value
@@ -21,7 +22,7 @@ BOOKINGS = [
     [(x, str(x)) for x in [9, 10, 11, 12, 13, 14, 15, 18]],
 ]
 
-def render_booking(**configuration):
+def booking_text(**configuration):
     def _():
         direction_change, value1 = prompt_value("date", "", value_type=int, choices=BOOKINGS[0], required=True)
         if direction_change:
@@ -34,15 +35,21 @@ def render_booking(**configuration):
 
     return _
 
-@mission(renderers=d(text=render_booking), configurator=None)
-def booking(*, state, inpt, renderers=("text",), **configuration):
+def booking_pageno(state):
+    return (3, 4)
+
+@mission(concerns=d(rendering=d(text=booking_text)), configurator=None, pageno=booking_pageno)
+def booking(*, state, inpt, **configuration):
     if inpt:
         command = trek.CONTINUE
         state["booking"] = inpt
     else:
         command = trek.RETRY
 
-    return command, state, d(renders={x: booking.hypertrek["renderers"][x](**configuration) for x in renderers})
+    concerns = booking.hypertrek["concerns"].copy()
+    concerns["rendering"] = {k: v(**configuration) for k, v in concerns["rendering"].items()}
+
+    return command, state, concerns
 
 class PocForm(forms.Form):
     name = forms.CharField(max_length=16, label="What's your name?", help_text="Please enter your name.")
@@ -76,7 +83,7 @@ direction_change = {direction_change}
 Input
 =====
 
-{json.dumps(inpt, indent=4)}
+{dumps(inpt, indent=4)}
 
 Command
 =======
@@ -86,7 +93,7 @@ Command
 State
 =====
 
-{json.dumps(state, indent=4)}
+{dumps(state, indent=4)}
     """.strip()
 
     with open("/tmp/hypertrek.log", "w") as f:
@@ -102,7 +109,8 @@ def fill_poc_trek():
         while True:
             os.system('clear')
 
-            title = f"Mission: {state['mission_index']}"
+            pageno = trek.pageno(thetrek, state)
+            title = f'Mission: {state["hypertrek"]["i"]+1} of {pageno[0]}-{pageno[1]}'
             print(title)
             print("=" * len(title))
             print()
@@ -111,7 +119,7 @@ def fill_poc_trek():
             # Display page
             cmd, state, concerns = trek.execute(thetrek, state, inpt)
             log(inpt, state, cmd, i, direction_change)
-            direction_change, inpt = concerns["renders"]["text"]()
+            direction_change, inpt = concerns["rendering"]["text"]()
 
             # Validate input
             cmd, state, concerns = trek.execute(thetrek, state, inpt)
@@ -133,8 +141,9 @@ def fill_poc_trek():
     title = f"Trek completed"
     print(title)
     print("=" * len(title))
+
     print()
-    print(json.dumps(state, indent=4))
+    print(dumps(state, indent=4))
     print()
     print("thxbai!")
 

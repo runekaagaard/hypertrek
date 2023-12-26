@@ -46,19 +46,21 @@ def form_factory(form_class, fields):
 
     return FormFactory  # Todo: rename to fit form_class
 
-@mission(renderers=d(html=html, text=text, docs=docs), configurator=FormConfigurator)
-def form(form_class, /, *, state, inpt, fields=None, renderers=("html", "text", "docs"), **configuration):
+@mission(concerns=d(rendering=d(html=html, text=text, docs=docs)), configurator=FormConfigurator,
+         pageno=lambda state: (1, 1))
+def form(form_class, /, *, state, inpt, first, fields, **configuration):
     form_class = form_class if fields is None else form_factory(form_class, fields)
     data = {x: inpt.get(x, state.get(x)) for x in fields}
 
-    if inpt:
-        form_ = form_class(data=data if data else None)
-    else:
-        form_ = form_class(initial=data if data else None)
-    if data and form_.is_valid():
+    form_ = form_class(initial=data if first else None, data=data if not first else None)
+
+    if not first and form_.is_valid():
         command = trek.CONTINUE
         state.update(form_.cleaned_data)
     else:
         command = trek.RETRY
 
-    return command, state, d(renders={x: form.hypertrek["renderers"][x](form_, **configuration) for x in renderers})
+    concerns = form.hypertrek["concerns"].copy()
+    concerns["rendering"] = {k: v(form_, **configuration) for k, v in concerns["rendering"].items()}
+
+    return command, state, concerns
