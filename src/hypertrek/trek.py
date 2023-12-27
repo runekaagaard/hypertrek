@@ -9,12 +9,12 @@ def execute(trek, state, inpt=None):
         inpt = {}
 
     hypertrek = state["hypertrek"]
-
     first = hypertrek["i"] not in hypertrek["executed"]
     hypertrek["executed"].add(hypertrek["i"])
+
     return trek[hypertrek["i"]](state=state, inpt=inpt, first=first)
 
-def forward(trek, state=None, inpt=None):
+def forward(trek, state=None):
     if state["hypertrek"]["i"] + 1 > len(trek) - 1:
         return True, state
     else:

@@ -30,8 +30,8 @@ def booking_text(data, errors, **configuration):
             for error in errors:
                 print(colored(f"- {error}", 'red'))
             print()
-        if data:
-            for k, v in data.items():
+        if "booking" in data:
+            for k, v in data["booking"].items():
                 print(f"{k}: {v}")
             print()
 
@@ -56,7 +56,7 @@ def booking_text(data, errors, **configuration):
         else:
             value4 = None
 
-        return None, {"month": value1, "date": value2, "time": value3, "late_ok": value4}
+        return None, {"booking": {"month": value1, "date": value2, "time": value3, "late_ok": value4}}
 
     return _
 
@@ -77,17 +77,16 @@ def booking(*, state, inpt, first, **configuration):
     errors = []
 
     command = trek.RETRY
-    if not first and inpt:
-        if inpt.get("late_ok", None) is False:
+    if not first and inpt and "booking" in inpt:
+        if inpt["booking"].get("late_ok", None) is False:
             errors.append("Choose an earlier time then!")
         else:
             command = trek.CONTINUE
-            state["booking"] = inpt
+            state["booking"] = inpt["booking"]
 
     concerns = booking.hypertrek["concerns"].copy()
     concerns["rendering"] = {
-        k: v(inpt if inpt else state.get("booking", {}), errors, **configuration)
-        for k, v in concerns["rendering"].items()
+        k: v(inpt if inpt else state, errors, **configuration) for k, v in concerns["rendering"].items()
     }
 
     return command, state, concerns
@@ -204,6 +203,7 @@ def fill_poc_trek():
 
         is_done, state = direction(thetrek, state)
 
+    os.system('clear')
     title = f"Trek completed"
     print(title)
     print("=" * len(title))
