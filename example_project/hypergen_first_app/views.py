@@ -3,7 +3,7 @@ from hypergen.imports import *
 from contextlib import contextmanager
 
 from hypertrek import trek
-from hypergen_first_app.hypertrek import poc_trek
+from hypergen_first_app.treks import poc_trek
 
 @contextmanager
 def base_template():

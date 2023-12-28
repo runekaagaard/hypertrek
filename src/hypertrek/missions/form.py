@@ -100,7 +100,7 @@ def form(form_class, /, *, state, method, first, fields, inpt=None, **configurat
     if method == "get":
         data = {x: state.get(x) for x in fields}
     elif method == "post":
-        data = {x: inpt.get(x, state.get(x)) for x in fields}
+        data = inpt
 
     form_class = form_class if fields is None else form_factory(form_class, fields)
     form_instance = form_class(initial=data if first else None, data=data if not first else None)
