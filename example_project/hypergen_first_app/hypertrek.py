@@ -60,6 +60,21 @@ def booking_text(data, errors, **configuration):
 
     return _
 
+def booking_hypergen(data, errors, **configuration):
+    def _():
+        from hypergen.imports import label, input_
+        label("BOOK IT!")
+        return {
+            "booking": {
+                "month": input_(id_="book-it", value=999),
+                "date": 1,
+                "time": 2,
+                "late_ok": True,
+            }
+        }
+
+    return _
+
 def booking_pageno(state):
     try:
         if state["booking"]["time"] > 16:
@@ -69,8 +84,9 @@ def booking_pageno(state):
     except KeyError:
         return (3, 4)
 
-@mission(concerns=d(rendering=d(text=booking_text)), configurator=None, pageno=booking_pageno)
-def booking(*, state, inpt, first, **configuration):
+@mission(concerns=d(rendering=d(text=booking_text, hypergen=booking_hypergen)), configurator=None,
+         pageno=booking_pageno)
+def booking(*, state, first, inpt=None, **configuration):
     if inpt is None:
         inpt = {}
 
@@ -91,6 +107,16 @@ def booking(*, state, inpt, first, **configuration):
 
     return command, state, concerns
 
+def template_hypergen(title, description):
+    def _():
+        from hypergen.imports import h2, p
+        h2(title)
+        p(description)
+
+        return True
+
+    return _
+
 def template_text(title, description):
     def _():
         print(colored(title, attrs=["bold"]))
@@ -102,8 +128,9 @@ def template_text(title, description):
 
     return _
 
-@mission(concerns=d(rendering=d(text=template_text)), configurator=None, pageno=lambda *a, **kw: (1, 1))
-def template(title, description, *, state, inpt, first, **configuration):
+@mission(concerns=d(rendering=d(text=template_text, hypergen=template_hypergen)), configurator=None,
+         pageno=lambda *a, **kw: (1, 1))
+def template(title, description, *, state, method, first, inpt=None, **configuration):
     command = trek.RETRY
     if inpt:
         command = trek.CONTINUE
@@ -213,4 +240,4 @@ def fill_poc_trek():
     print()
     print("thxbai!")
 
-fill_poc_trek()
+# fill_poc_trek()

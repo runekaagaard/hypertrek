@@ -4,15 +4,20 @@ FORWARD, BACKWARD = "FORWARD", "BACKWARD"
 def init(trek):
     return trek(), {"hypertrek": {"i": 0, "executed": set()}}
 
-def execute(trek, state, inpt=None):
-    if inpt is None:
-        inpt = {}
-
+def get(trek, state):
     hypertrek = state["hypertrek"]
     first = hypertrek["i"] not in hypertrek["executed"]
     hypertrek["executed"].add(hypertrek["i"])
 
-    return trek[hypertrek["i"]](state=state, inpt=inpt, first=first)
+    return trek[hypertrek["i"]](state=state, first=first, method="get")
+
+def post(trek, state, inpt):
+    assert inpt
+    hypertrek = state["hypertrek"]
+    first = hypertrek["i"] not in hypertrek["executed"]
+    hypertrek["executed"].add(hypertrek["i"])
+
+    return trek[hypertrek["i"]](state=state, inpt=inpt, first=first, method="post")
 
 def forward(trek, state=None):
     if state["hypertrek"]["i"] + 1 > len(trek) - 1:

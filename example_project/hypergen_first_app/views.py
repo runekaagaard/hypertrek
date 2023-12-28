@@ -1,82 +1,63 @@
-# Interesting stuff can be imported more precisely from the template, liveview and context modules. For now lets
-# get it all :)
 from hypergen.imports import *
 
 from contextlib import contextmanager
-import codecs
 
-# Templates - as your app grows you probably want to move them to a templates.py file.
+from hypertrek import trek
+from hypergen_first_app.hypertrek import poc_trek
 
-@contextmanager  # base templates must be context managers that yields where the main content will be.
+@contextmanager
 def base_template():
     """
     This base template is meant to be shared between your views.
     """
-    doctype()  # all html elements are available as functions.
-    with html():  # elements can nest.
+    doctype()
+    with html():
         with head():
-            if title:
-                title("Hello hypergen_first_app")  # arguments to elements becomes the html innerText of the element.
-            link("https://unpkg.com/simpledotcss@2.0.7/simple.min.css")  # include all you html5 boilerplate.
-        with body():  # warning, don't set the target_id directly on the body element, does not work!
-            h1("Hello hypergen_first_app")
-            p(i("Congratulations on installing your very first Django Hypergen app!")
-             )  # elements can take elements.
+            title("Hypertrek Hypergen Example")
+            link("https://unpkg.com/simpledotcss@2.0.7/simple.min.css")
+        with body():
+            h1("Hypertrek Hypergen Example")
 
-            with div(id_="content"):  # see target_id below. Do NOT set the id_ on the body() tag!
-                # The html triggered inside your views will appear here.
+            with div(id_="content"):
                 yield
 
-            h1("Where to go from here?")
-            with ul():
-                li(
-                    "Play around with the source at",
-                    code("./hypergen_first_app/views.py"),
-                    sep=" ",  # arguments are joined by a " " separator.
-                )
-                li("Read the", a("getting started", href="https://hypergen.it/gettingstarted/begin/"), "guide",
-                   sep=" ")
-                li("Check out the full", a("documentation", href="https://hypergen.it/documentation/"), sep=" ")
-                li("Drop by and", a("say hi", href="https://github.com/runekaagaard/django-hypergen/discussions"),
-                   "- we would love to talk to you!", sep=" ")
-                li("Submit ",
-                   a("bug reports and feature requests",
-                     href="https://github.com/runekaagaard/django-hypergen/issues"))  # kwargs becomes attributes.
-                li("Go crazy 24/7!")
+base_template.target_id = "content"
 
-base_template.target_id = "content"  # Makes the base_template know where it's inner content is nested.
+@contextmanager
+def collect():
+    from hypergen.imports import context, input_, select, textarea
 
-def content_template(encrypted_message=None):
-    """
-    This template is specific to your view and the actions belonging to it. Composes just like React functions.
-    """
-    p("Top secret agent? Encrypt your message with a super secret key:")
-    input_(
-        id_="message",
-        # call "my_action" on each oninput event.
-        # callback() takes all normal python datatypes and hypergen html elements as input.
-        oninput=callback(my_action, THIS),  # 'THIS' means the value of the element it self.
-    )
-    pre(code(encrypted_message if encrypted_message else "Type something, dammit!"))
+    result = {}
 
-# Views - one view normally have multiple actions.
+    class Collector():
+        @contextmanager
+        def wrap_element_init(self, element, children, attrs):
+            print(type(element), children, attrs)
+            yield
+
+    collector = Collector()
+    context.hypergen.plugins.append(collector)
+    yield result
+    # TODO: remove collector from plugins.
 
 @liveview(perm=NO_PERM_REQUIRED, base_template=base_template)
-def my_view(request):
-    """
-    Views renders html and binds frontend events to actions.
-    """
-    content_template()
+def show_trek(request):
+    poc, state = trek.init(poc_trek)
+    cmd, state, concerns = trek.get(poc, state)
+    inpt = concerns["rendering"]["hypergen"]()
 
-# Actions - if you have a lot, move them to a actions.py file.
+    button("Next", id_="next", onclick=callback(commit_mission, state, inpt))
+    hprint(state=state)
 
-@action(perm=NO_PERM_REQUIRED, target_id="content")
-def my_action(request, message):
-    """
-    Actions processes frontend events.
-    
-    This action tells the frontend to put the output of content_template into the 'content' div.
+@action(perm=NO_PERM_REQUIRED, base_template=base_template)
+def commit_mission(request, state, inpt):
+    poc = poc_trek()
+    cmd, state, concerns = trek.post(poc, state, inpt)
+    if cmd == trek.CONTINUE:
+        is_done, state = trek.forward(poc, state)
+        cmd, state, concerns = trek.get(poc, state)
 
-    The 'message' arg is the value of the <input> element.
-    """
-    content_template(codecs.encode(message if message is not None else "", 'rot_13'))
+    inpt = concerns["rendering"]["hypergen"]()
+    button("Next", id_="next", onclick=callback(commit_mission, state, inpt))
+
+    hprint(state=state, inpt=inpt)
