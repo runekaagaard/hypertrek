@@ -44,7 +44,9 @@ def form_factory(form_class, fields):
 
             self.fields = {k: v for k, v in self.fields.items() if k in fields}
 
-    return FormFactory  # Todo: rename to fit form_class
+    FormFactory.__name__ = form_class.__name__ + '_Factory'
+
+    return FormFactory
 
 @mission(concerns=d(rendering=d(html=html, text=text, docs=docs)), configurator=FormConfigurator,
          pageno=lambda state: (1, 1))
