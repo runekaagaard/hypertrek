@@ -1,5 +1,7 @@
 d = dict
 
+from hypergen.imports import *
+
 import os, re, calendar
 
 from hypertrek.missions import mission
@@ -10,6 +12,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 from termcolor import colored
+
+### Booking mission ###
 
 BOOKINGS = [
     [(i, calendar.month_name[i]) for i in range(1, 13)],
@@ -55,7 +59,6 @@ def booking_text(data, errors, **configuration):
 
 def booking_hypergen(data, errors, **configuration):
     def _():
-        from hypergen.imports import label, input_
         label("BOOK IT!")
         return {
             "booking": {
@@ -100,9 +103,10 @@ def booking(*, state, first, inpt=None, **configuration):
 
     return command, state, concerns
 
+### Template mission ###
+
 def template_hypergen(title, description):
     def _():
-        from hypergen.imports import h2, p
         h2(title)
         p(description)
 

@@ -10,7 +10,8 @@
 - hypertrek_run_trek TREKNAME
 - hypertrek_display_trek TREKNAME
 ** TODO Fix terminal mode regressions.
-** TODO Move is_done out of forward and back.
 ** TODO Configuration
 ** TODO UI
-
+** TODO Make multipage for a single mission work.
+** DONE Add first page last page to state.
+** DONE Move is_done out of forward and back.

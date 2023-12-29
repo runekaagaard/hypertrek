@@ -1,6 +1,7 @@
 d = dict
 
 import os, re, calendar
+from example_project.hypergen_first_app.treks import poc_trek
 
 from hypergen.imports import dumps
 
@@ -44,7 +45,8 @@ State
         f.write(msg)
 
 def fill_poc_trek():
-    thetrek, state = trek.init(poc_trek)
+    thetrek = poc_trek()
+    state = trek.new_state()
     is_done = False
 
     i = 0
@@ -61,12 +63,12 @@ def fill_poc_trek():
 
             i += 1
             # Display page
-            cmd, state, concerns = trek.execute(thetrek, state, inpt)
+            cmd, state, concerns = trek.get(thetrek, state)
             log(inpt, state, cmd, i, direction_change)
             direction_change, inpt = concerns["rendering"]["text"]()
 
             # Validate input
-            cmd, state, concerns = trek.execute(thetrek, state, inpt)
+            cmd, state, concerns = trek.post(thetrek, state, inpt)
             log(inpt, state, cmd, i, direction_change)
 
             if direction_change == trek.BACKWARD:
@@ -75,7 +77,8 @@ def fill_poc_trek():
             else:
                 if direction_change == trek.FORWARD:
                     # When skipping forward, validate with state as input.
-                    cmd, state, concerns = trek.execute(thetrek, state, state)
+                    # TODO: This is wrong!
+                    cmd, state, concerns = trek.post(thetrek, state, state)
                 if cmd == trek.CONTINUE:
                     direction = trek.forward
                     break

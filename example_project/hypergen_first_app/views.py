@@ -23,36 +23,23 @@ def base_template():
 
 base_template.target_id = "content"
 
-@contextmanager
-def collect():
-    from hypergen.imports import context, input_, select, textarea
-
-    result = {}
-
-    class Collector():
-        @contextmanager
-        def wrap_element_init(self, element, children, attrs):
-            print(type(element), children, attrs)
-            yield
-
-    collector = Collector()
-    context.hypergen.plugins.append(collector)
-    yield result
-    # TODO: remove collector from plugins.
-
 def trek_template(concerns, state):
     inpt = concerns["rendering"]["hypergen"]()
     button("Commit", id_="commit", onclick=callback(commit_mission, state, inpt))
     hprint(state=state)
     with p():
-        button("<-", id_="previous", onclick=callback(bck, state))
+        if not state["hypertrek"]["left_edge"]:
+            button("<-", id_="previous", onclick=callback(bck, state))
         span(" ")
-        button("->", id_="next", onclick=callback(fwd, state, inpt))
+        if not state["hypertrek"]["right_edge"]:
+            button("->", id_="next", onclick=callback(fwd, state, inpt))
 
 @liveview(perm=NO_PERM_REQUIRED, base_template=base_template)
 def show_trek(request):
-    poc, state = trek.init(poc_trek)
+    poc = poc_trek()
+    state = trek.new_state()
     cmd, state, concerns = trek.get(poc, state)
+    assert cmd == trek.RETRY
     trek_template(concerns, state)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
@@ -60,7 +47,7 @@ def commit_mission(request, state, inpt):
     poc = poc_trek()
     cmd, state, concerns = trek.post(poc, state, inpt)
     if cmd == trek.CONTINUE:
-        is_done, state = trek.forward(poc, state)
+        state = trek.forward(poc, state)
         cmd, state, concerns = trek.get(poc, state)
 
     trek_template(concerns, state)
@@ -68,7 +55,7 @@ def commit_mission(request, state, inpt):
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
 def bck(request, state):
     poc = poc_trek()
-    is_done, state = trek.backward(poc, state)
+    state = trek.backward(poc, state)
     cmd, state, concerns = trek.get(poc, state)
 
     trek_template(concerns, state)
@@ -78,7 +65,7 @@ def fwd(request, state, inpt):
     poc = poc_trek()
     cmd, state, concerns = trek.post(poc, state, inpt)
     if cmd == trek.CONTINUE:
-        is_done, state = trek.forward(poc, state)
+        state = trek.forward(poc, state)
         cmd, state, concerns = trek.get(poc, state)
 
     trek_template(concerns, state)

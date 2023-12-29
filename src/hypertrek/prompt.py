@@ -13,7 +13,7 @@ from prompt_toolkit.application.current import get_app
 from django import forms
 from django.forms import ValidationError
 
-from hypertrek.trek import BACKWARD, FORWARD
+BACKWARD, FORWARD = "BACKWARD", "FORWARD"
 
 def cprint(txt):
     return print_formatted_text(ANSI(txt))
