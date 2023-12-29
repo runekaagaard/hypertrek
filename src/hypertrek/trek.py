@@ -1,6 +1,6 @@
-CONTINUE, RETRY, TERMINATE = "CONTINUE", "RETRY", "TERMINATE"
+CONTINUE, RETRY = "CONTINUE", "RETRY"
 
-__all__ = ["new_state", "get", "post", "forward", "backward", "pageno", "CONTINUE", "RETRY", "TERMINATE"]
+__all__ = ["new_state", "get", "post", "forward", "backward", "pageno", "CONTINUE", "RETRY"]
 
 def edges(trek, state):
     state["hypertrek"]["left_edge"] = state["hypertrek"]["i"] == 0

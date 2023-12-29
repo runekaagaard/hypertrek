@@ -25,7 +25,9 @@ base_template.target_id = "content"
 
 def trek_template(concerns, state):
     inpt = concerns["rendering"]["hypergen"]()
-    button("Commit", id_="commit", onclick=callback(commit_mission, state, inpt))
+    if not state["hypertrek"]["right_edge"]:
+        with p():
+            button("Send", id_="commit", onclick=callback(post, state, inpt))
     hprint(state=state)
     with p():
         if not state["hypertrek"]["left_edge"]:
@@ -35,7 +37,7 @@ def trek_template(concerns, state):
             button("->", id_="next", onclick=callback(fwd, state, inpt))
 
 @liveview(perm=NO_PERM_REQUIRED, base_template=base_template)
-def show_trek(request):
+def get(request):
     poc = poc_trek()
     state = trek.new_state()
     cmd, state, concerns = trek.get(poc, state)
@@ -43,7 +45,7 @@ def show_trek(request):
     trek_template(concerns, state)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
-def commit_mission(request, state, inpt):
+def post(request, state, inpt):
     poc = poc_trek()
     cmd, state, concerns = trek.post(poc, state, inpt)
     if cmd == trek.CONTINUE:

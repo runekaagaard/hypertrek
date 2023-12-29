@@ -17,7 +17,7 @@ from termcolor import colored
 
 BOOKINGS = [
     [(i, calendar.month_name[i]) for i in range(1, 13)],
-    [(x, str(x)) for x in range(0, 30)],
+    [(x, str(x)) for x in range(1, 30)],
     [(x, f"{x}:00-{x+1}:00") for x in range(9, 18)],
 ]
 
@@ -59,15 +59,14 @@ def booking_text(data, errors, **configuration):
 
 def booking_hypergen(data, errors, **configuration):
     def _():
-        label("BOOK IT!")
-        return {
-            "booking": {
-                "month": input_(id_="book-it", value=999),
-                "date": 1,
-                "time": 2,
-                "late_ok": True,
-            }
-        }
+        keys = ["month", "date", "time"]
+        stage = len(data)
+        label(keys[stage].capitalize())
+        with p():
+            value = select([option(label, value=pk) for pk, label in BOOKINGS[stage]], id_="booking_value",
+                           coerce_to=int)
+        hprint(data=data, stage=stage)
+        return value
 
     return _
 
@@ -82,23 +81,22 @@ def booking_pageno(state):
 
 @mission(concerns=d(rendering=d(text=booking_text, hypergen=booking_hypergen)), configurator=None,
          pageno=booking_pageno)
-def booking(*, state, first, inpt=None, **configuration):
-    if inpt is None:
-        inpt = {}
+def booking(*, state, method, first, inpt=None, **configuration):
+    if "booking" not in state:
+        state["booking"] = []
 
     errors = []
 
     command = trek.RETRY
-    if not first and inpt and "booking" in inpt:
-        if inpt["booking"].get("late_ok", None) is False:
-            errors.append("Choose an earlier time then!")
-        else:
-            command = trek.CONTINUE
-            state["booking"] = inpt["booking"]
+    if method == "post":
+        state["booking"].append(inpt)
+
+    if len(state["booking"]) == 3:
+        command = trek.CONTINUE
 
     concerns = booking.hypertrek["concerns"].copy()
     concerns["rendering"] = {
-        k: v(inpt if inpt else state, errors, **configuration) for k, v in concerns["rendering"].items()
+        k: v(state["booking"], errors, **configuration) for k, v in concerns["rendering"].items()
     }
 
     return command, state, concerns

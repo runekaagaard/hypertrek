@@ -24,7 +24,8 @@ class FormConfigurator(forms.Form):
 
     def mission_kwargs(self):
         return {
-            x: self.cleaned_data[x] for x in ("title", "subtitle", "description", "help_text", "template", "fields")
+            x: self.cleaned_data[x]
+            for x in ("title", "subtitle", "description", "help_text", "template", "fields")
         }
 
 def text(form):
@@ -99,7 +100,7 @@ def form_factory(form_class, fields):
 def form(form_class, /, *, state, method, first, fields, inpt=None, **configuration):
     if method == "get":
         data = {x: state.get(x) for x in fields}
-    elif method == "post":
+    else:
         data = inpt
 
     form_class = form_class if fields is None else form_factory(form_class, fields)
