@@ -59,13 +59,21 @@ def booking_text(data, errors, **configuration):
 
 def booking_hypergen(data, errors, **configuration):
     def _():
-        keys = ["month", "date", "time"]
-        stage = len(data)
-        label(keys[stage].capitalize())
+        i = len(data)
+        keys = ["month", "date", "time", "late OK?"]
+        key = keys[i]
+
+        label(key.capitalize())
         with p():
-            value = select([option(label, value=pk) for pk, label in BOOKINGS[stage]], id_="booking_value",
-                           coerce_to=int)
-        hprint(data=data, stage=stage)
+            if i < 3:
+                value = select([option(label, value=pk) for pk, label in BOOKINGS[i]], id_="booking_value",
+                               coerce_to=int)
+            else:
+                if data[-1] > 16:
+                    value = input_(type_="checkbox", id_="booking_value")
+                else:
+                    value = None
+        hprint(data=data, i=i, errors=errors)
         return value
 
     return _
@@ -87,12 +95,18 @@ def booking(*, state, method, first, inpt=None, **configuration):
 
     errors = []
 
-    command = trek.RETRY
     if method == "post":
         state["booking"].append(inpt)
 
-    if len(state["booking"]) == 3:
+    l = len(state["booking"])
+    command = trek.RETRY
+    if l == 3 and state["booking"][-1] <= 16:
         command = trek.CONTINUE
+    elif l == 4:
+        if state["booking"][-1] is True:
+            command = trek.CONTINUE
+        else:
+            errors.append("Choose an earlier time, then!")
 
     concerns = booking.hypertrek["concerns"].copy()
     concerns["rendering"] = {

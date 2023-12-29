@@ -21,6 +21,6 @@ import hypergen_first_app.urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', lambda request: redirect('/hypergen_first_app/my_view/', permanent=False)),
+    path('', lambda request: redirect('/hypergen_first_app/get/', permanent=False)),
     path('hypergen_first_app/', include(hypergen_first_app.urls, namespace="hypergen_first_app")),
 ]

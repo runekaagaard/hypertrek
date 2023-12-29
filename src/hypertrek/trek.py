@@ -19,7 +19,6 @@ def get(trek, state):
     return trek[hypertrek["i"]](state=state, first=first, method="get")
 
 def post(trek, state, inpt):
-    assert inpt
     hypertrek = state["hypertrek"]
     first = hypertrek["i"] not in hypertrek["visited"]
     hypertrek["visited"].add(hypertrek["i"])
