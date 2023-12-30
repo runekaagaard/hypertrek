@@ -1,3 +1,4 @@
+d = dict
 from hypergen.imports import *
 
 from contextlib import contextmanager
@@ -25,6 +26,7 @@ base_template.target_id = "content"
 
 def trek_template(poc, state, concerns):
     min_, max_, current = trek.page_number(poc, state)
+    progress(value=current / ((max_+min_) / 2), style=d(width="100%"))
     p("On page ", current, " out of minimum ", min_, " and maximum ", max_, ".")
 
     inpt = concerns["rendering"]["hypergen"]()
