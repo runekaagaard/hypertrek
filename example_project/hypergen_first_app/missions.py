@@ -64,7 +64,7 @@ def booking_hypergen(data, errors, **configuration):
             value = select([option(b, value=a) for a, b in BOOKINGS[i]], name=name, id_="booking_value",
                            coerce_to=int)
 
-        return name, value
+        return {name: value}
 
     def _():
         if data["done"]:
@@ -81,11 +81,11 @@ def booking_hypergen(data, errors, **configuration):
                 li(error)
 
         if not data["month"]:
-            name, value = render_options("month", "Select month", 0)
+            return render_options("month", "Select month", 0)
         elif not data["date"]:
-            name, value = render_options("date", "Select date", 1)
+            return render_options("date", "Select date", 1)
         elif not data["time"]:
-            name, value = render_options("time", "Select time for appointment", 2)
+            return render_options("time", "Select time for appointment", 2)
         else:
             if data["time"] > 16:
                 label("Are you OK with a late booking?")
@@ -95,8 +95,6 @@ def booking_hypergen(data, errors, **configuration):
                 return {"late_ok": value}
 
             return {"late_ok": None}
-
-        return {name: value}
 
     return _
 
