@@ -23,7 +23,10 @@ def base_template():
 
 base_template.target_id = "content"
 
-def trek_template(concerns, state):
+def trek_template(poc, state, concerns):
+    min_, max_, current = trek.page_number(poc, state)
+    p("On page ", current, " of ", min_, "-", max_)
+
     inpt = concerns["rendering"]["hypergen"]()
     if not state["hypertrek"]["right_edge"]:
         with p():
@@ -42,7 +45,7 @@ def get(request):
     state = trek.new_state()
     cmd, state, concerns = trek.get(poc, state)
     assert cmd == trek.RETRY
-    trek_template(concerns, state)
+    trek_template(poc, state, concerns)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
 def post(request, state, inpt):
@@ -52,7 +55,7 @@ def post(request, state, inpt):
         state = trek.forward(poc, state)
         cmd, state, concerns = trek.get(poc, state)
 
-    trek_template(concerns, state)
+    trek_template(poc, state, concerns)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
 def bck(request, state):
@@ -60,7 +63,7 @@ def bck(request, state):
     state = trek.backward(poc, state)
     cmd, state, concerns = trek.get(poc, state)
 
-    trek_template(concerns, state)
+    trek_template(poc, state, concerns)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
 def fwd(request, state, inpt):
@@ -70,4 +73,4 @@ def fwd(request, state, inpt):
         state = trek.forward(poc, state)
         cmd, state, concerns = trek.get(poc, state)
 
-    trek_template(concerns, state)
+    trek_template(poc, state, concerns)

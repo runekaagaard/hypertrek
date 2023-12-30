@@ -99,13 +99,15 @@ def booking_hypergen(data, errors, **configuration):
     return _
 
 def booking_pageno(state):
+    if not state["booking"].get("time"):
+        return (3, 4, 0)
     try:
-        if state["booking"]["time"] > 16:
-            return (4, 4)
+        if state["booking"]["time"] and state["booking"]["time"] > 16:
+            return (4, 4, 99)
         else:
-            return (3, 3)
+            return (3, 3, 99)
     except KeyError:
-        return (3, 4)
+        return (3, 4, 99)
 
 @mission(concerns=d(rendering=d(text=booking_text, hypergen=booking_hypergen)), configurator=None,
          pageno=booking_pageno)
@@ -165,7 +167,7 @@ def template_text(title, description):
     return _
 
 @mission(concerns=d(rendering=d(text=template_text, hypergen=template_hypergen)), configurator=None,
-         pageno=lambda *a, **kw: (1, 1))
+         pageno=lambda *a, **kw: (1, 1, 1))
 def template(title, description, *, state, method, first, inpt=None, **configuration):
     command = trek.RETRY
     if inpt:

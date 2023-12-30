@@ -35,11 +35,13 @@ def backward(trek, state):
 
     return edges(trek, state)
 
-def pageno(trek, state):
-    result = [0, 0]
-    for mission in trek:
-        pno = mission._partial.func.hypertrek["pageno"](state)
-        result[0] += pno[0]
-        result[1] += pno[1]
+def page_number(trek, state):
+    min_, max_, current = 0, 0, 0
+    for i, mission in enumerate(trek):
+        min2, max2, current2 = mission._partial.func.hypertrek["pageno"](state)
+        min_ += min2
+        max_ += max2
+        if i <= state["hypertrek"]["i"]:
+            current += current2
 
-    return result
+    return min_, max_, current
