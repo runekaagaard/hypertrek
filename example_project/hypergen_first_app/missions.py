@@ -58,23 +58,45 @@ def booking_text(data, errors, **configuration):
     return _
 
 def booking_hypergen(data, errors, **configuration):
-    def _():
-        i = len(data)
-        keys = ["month", "date", "time", "late OK?"]
-        key = keys[i]
+    def render_options(name, title, i):
+        label(title)
+        with div():
+            value = select([option(b, value=a) for a, b in BOOKINGS[i]], name=name, id_="booking_value",
+                           coerce_to=int)
 
-        label(key.capitalize())
-        with p():
-            if i < 3:
-                value = select([option(label, value=pk) for pk, label in BOOKINGS[i]], id_="booking_value",
-                               coerce_to=int)
-            else:
-                if data[-1] > 16:
+        return name, value
+
+    def _():
+        if data["done"]:
+            p("You booked: ", data["date"], " / ", data["month"], " at ",
+              [b for a, b in BOOKINGS[2] if a == data["time"]][0])
+            label("Cancel?")
+            with div():
+                value = input_(type_="checkbox", id_="booking_value")
+
+                return {"cancel": value}
+
+        with ul(class_="errorlist"):
+            for error in errors:
+                li(error)
+
+        if not data["month"]:
+            name, value = render_options("month", "Select month", 0)
+        elif not data["date"]:
+            name, value = render_options("date", "Select date", 1)
+        elif not data["time"]:
+            name, value = render_options("time", "Select time for appointment", 2)
+        else:
+            if data["time"] > 16:
+                label("Are you OK with a late booking?")
+                with div():
                     value = input_(type_="checkbox", id_="booking_value")
-                else:
-                    value = None
-        hprint(data=data, i=i, errors=errors)
-        return value
+
+                return {"late_ok": value}
+
+            return {"late_ok": None}
+
+        return {name: value}
 
     return _
 
@@ -90,23 +112,30 @@ def booking_pageno(state):
 @mission(concerns=d(rendering=d(text=booking_text, hypergen=booking_hypergen)), configurator=None,
          pageno=booking_pageno)
 def booking(*, state, method, first, inpt=None, **configuration):
+    initial = {"month": None, "date": None, "time": None, "late_ok": None, "done": False}
     if "booking" not in state:
-        state["booking"] = []
+        state["booking"] = initial.copy()
 
     errors = []
 
-    if method == "post":
-        state["booking"].append(inpt)
-
-    l = len(state["booking"])
     command = trek.RETRY
-    if l == 3 and state["booking"][-1] <= 16:
-        command = trek.CONTINUE
-    elif l == 4:
-        if state["booking"][-1] is True:
-            command = trek.CONTINUE
+    if method == "post":
+        if inpt.pop("cancel", None):
+            state["booking"] = initial.copy()
+            print("FOO", state["booking"])
         else:
-            errors.append("Choose an earlier time, then!")
+            state["booking"].update(inpt)
+
+        if state["booking"]["time"]:
+            if state["booking"]["time"] < 17:
+                state["booking"]["done"] = True
+                command = trek.CONTINUE
+            else:
+                if state["booking"]["late_ok"] is True:
+                    state["booking"]["done"] = True
+                    command = trek.CONTINUE
+                elif state["booking"]["late_ok"] is False:
+                    errors.append("Choose an earlier time, then!")
 
     concerns = booking.hypertrek["concerns"].copy()
     concerns["rendering"] = {
