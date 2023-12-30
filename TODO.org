@@ -12,6 +12,7 @@
 ** TODO Fix terminal mode regressions.
 ** TODO Configuration
 ** TODO UI
-** TODO Make multipage for a single mission work.
+** DONE Multipage pagenumber ranges
+** DONE Make multipage for a single mission work.
 ** DONE Add first page last page to state.
 ** DONE Move is_done out of forward and back.
