@@ -99,15 +99,20 @@ def booking_hypergen(data, errors, **configuration):
     return _
 
 def booking_pageno(state):
-    if not state["booking"].get("time"):
-        return (3, 4, 0)
-    try:
-        if state["booking"]["time"] and state["booking"]["time"] > 16:
-            return (4, 4, 99)
-        else:
-            return (3, 3, 99)
-    except KeyError:
-        return (3, 4, 99)
+    if "booking" not in state:
+        return (3, 4, None)
+
+    if not state["booking"]["month"]:
+        return (3, 4, 1)
+    elif not state["booking"]["date"]:
+        return (3, 4, 2)
+    elif not state["booking"]["time"]:
+        return (3, 4, 3)
+
+    if state["booking"]["time"] < 17:
+        return (3, 3, 3)
+    else:
+        return (4, 4, 4)
 
 @mission(concerns=d(rendering=d(text=booking_text, hypergen=booking_hypergen)), configurator=None,
          pageno=booking_pageno)

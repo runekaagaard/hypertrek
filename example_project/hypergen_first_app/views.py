@@ -25,7 +25,7 @@ base_template.target_id = "content"
 
 def trek_template(poc, state, concerns):
     min_, max_, current = trek.page_number(poc, state)
-    p("On page ", current, " of ", min_, "-", max_)
+    p("On page ", current, " out of minimum ", min_, " and maximum ", max_, ".")
 
     inpt = concerns["rendering"]["hypergen"]()
     if not state["hypertrek"]["right_edge"]:
