@@ -7,14 +7,14 @@ CONTINUE, RETRY = "CONTINUE", "RETRY"
 
 ### Trek ###
 
-def edges(trek, state):
-    state["hypertrek"]["left_edge"] = state["hypertrek"]["i"] == 0
-    state["hypertrek"]["right_edge"] = state["hypertrek"]["i"] == len(trek) - 1
+def mark_begin_end(trek, state):
+    state["hypertrek"]["at_beginning"] = state["hypertrek"]["i"] == 0
+    state["hypertrek"]["at_end"] = state["hypertrek"]["i"] == len(trek) - 1
 
     return state
 
 def new_state():
-    return {"hypertrek": {"i": 0, "visited": set(), "left_edge": True, "right_edge": False}}
+    return {"hypertrek": {"i": 0, "visited": set(), "at_beginning": True, "at_end": False}}
 
 def get(trek, state):
     hypertrek = state["hypertrek"]
@@ -33,12 +33,12 @@ def post(trek, state, inpt):
 def forward(trek, state):
     state["hypertrek"]["i"] = min(state["hypertrek"]["i"] + 1, len(trek) - 1)
 
-    return edges(trek, state)
+    return mark_begin_end(trek, state)
 
 def backward(trek, state):
     state["hypertrek"]["i"] = max(state["hypertrek"]["i"] - 1, 0)
 
-    return edges(trek, state)
+    return mark_begin_end(trek, state)
 
 def progress(trek, state):
     min_, max_, current = 0, 0, 0

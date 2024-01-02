@@ -30,15 +30,15 @@ def trek_template(poc, state, concerns):
     p("On page ", current, " out of minimum ", min_, " and maximum ", max_, ".")
 
     inpt = concerns["rendering"]["hypergen"]()
-    if not state["hypertrek"]["right_edge"]:
+    if not state["hypertrek"]["at_end"]:
         with p():
             button("Send", id_="commit", onclick=callback(post, state, inpt))
     hprint(state=state)
     with p():
-        if not state["hypertrek"]["left_edge"]:
+        if not state["hypertrek"]["at_beginning"]:
             button("<-", id_="previous", onclick=callback(bck, state))
         span(" ")
-        if not state["hypertrek"]["right_edge"]:
+        if not state["hypertrek"]["at_end"]:
             button("->", id_="next", onclick=callback(fwd, state, inpt))
 
 @liveview(perm=NO_PERM_REQUIRED, base_template=base_template)
