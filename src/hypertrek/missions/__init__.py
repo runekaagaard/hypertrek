@@ -4,8 +4,8 @@ from functools import wraps
 
 from toolz import curry
 
-def mission(*, concerns, configurator, pageno):
-    hypertrek = d(concerns=concerns, configurator=configurator, pageno=pageno)
+def mission(*, concerns, configurator, progress):
+    hypertrek = d(concerns=concerns, configurator=configurator, progress=progress)
     def _(f):
         f.hypertrek = hypertrek
 

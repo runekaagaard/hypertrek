@@ -1,6 +1,6 @@
 CONTINUE, RETRY = "CONTINUE", "RETRY"
 
-__all__ = ["new_state", "get", "post", "forward", "backward", "pageno", "CONTINUE", "RETRY"]
+__all__ = ["CONTINUE", "RETRY", "new_state", "get", "post", "forward", "backward", "progress"]
 
 def edges(trek, state):
     state["hypertrek"]["left_edge"] = state["hypertrek"]["i"] == 0
@@ -35,10 +35,10 @@ def backward(trek, state):
 
     return edges(trek, state)
 
-def page_number(trek, state):
+def progress(trek, state):
     min_, max_, current = 0, 0, 0
     for i, mission in enumerate(trek):
-        min2, max2, current2 = mission._partial.func.hypertrek["pageno"](state)
+        min2, max2, current2 = mission._partial.func.hypertrek["progress"](state)
         min_ += min2
         max_ += max2
         if i <= state["hypertrek"]["i"]:

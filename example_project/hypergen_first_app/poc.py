@@ -55,8 +55,8 @@ def fill_poc_trek():
         while True:
             os.system('clear')
 
-            pageno = trek.pageno(thetrek, state)
-            title = f'Mission: {state["hypertrek"]["i"]+1} of {pageno[0]}-{pageno[1]}'
+            progress = trek.progress(thetrek, state)
+            title = f'Mission: {state["hypertrek"]["i"]+1} of {progress[0]}-{progress[1]}'
             print(title)
             print("=" * len(title))
             print()

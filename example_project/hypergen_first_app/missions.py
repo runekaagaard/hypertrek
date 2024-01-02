@@ -98,7 +98,7 @@ def booking_hypergen(data, errors, **configuration):
 
     return _
 
-def booking_pageno(state):
+def booking_progress(state):
     if "booking" not in state:
         return (3, 4, None)
 
@@ -115,7 +115,7 @@ def booking_pageno(state):
         return (4, 4, 4)
 
 @mission(concerns=d(rendering=d(text=booking_text, hypergen=booking_hypergen)), configurator=None,
-         pageno=booking_pageno)
+         progress=booking_progress)
 def booking(*, state, method, first, inpt=None, **configuration):
     initial = {"month": None, "date": None, "time": None, "late_ok": None, "done": False}
     if "booking" not in state:
@@ -172,7 +172,7 @@ def template_text(title, description):
     return _
 
 @mission(concerns=d(rendering=d(text=template_text, hypergen=template_hypergen)), configurator=None,
-         pageno=lambda *a, **kw: (1, 1, 1))
+         progress=lambda *a, **kw: (1, 1, 1))
 def template(title, description, *, state, method, first, inpt=None, **configuration):
     command = trek.RETRY
     if inpt:

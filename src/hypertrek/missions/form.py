@@ -96,7 +96,7 @@ def form_factory(form_class, fields):
     return FormFactory
 
 @mission(concerns=d(rendering=d(hypergen=hypergen, text=text, docs=docs)), configurator=FormConfigurator,
-         pageno=lambda state: (1, 1, 1))
+         progress=lambda state: (1, 1, 1))
 def form(form_class, /, *, state, method, first, fields, inpt=None, **configuration):
     if method == "get":
         data = {x: state.get(x) for x in fields}
