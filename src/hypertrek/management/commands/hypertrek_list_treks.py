@@ -19,5 +19,5 @@ class Command(BaseCommand):
             print(f"{obj_path(k)}: title='{v['title']}'")
 
             if options['verbose']:
-                for mission in k():
-                    print(" " * 4, obj_path(mission))
+                for i, mission in enumerate(k()):
+                    print(" " * 4, f"{i+1}.", obj_path(mission))
