@@ -4,7 +4,7 @@ from hypergen.imports import *
 from contextlib import contextmanager
 
 from hypertrek import hypertrek
-from hypergen_first_app.treks import poc_trek
+from hypergen_first_app.treks import example_trek
 
 @contextmanager
 def base_template():
@@ -24,8 +24,8 @@ def base_template():
 
 base_template.target_id = "content"
 
-def trek_template(poc, state, concerns):
-    min_, max_, current = hypertrek.progress(poc, state)
+def trek_template(trek, state, concerns):
+    min_, max_, current = hypertrek.progress(trek, state)
     progress(value=current / ((max_+min_) / 2), style=d(width="100%"))
     p("On page ", current, " out of minimum ", min_, " and maximum ", max_, ".")
 
@@ -43,36 +43,36 @@ def trek_template(poc, state, concerns):
 
 @liveview(perm=NO_PERM_REQUIRED, base_template=base_template)
 def get(request):
-    poc = poc_trek()
+    trek = example_trek()
     state = hypertrek.new_state()
-    cmd, state, concerns = hypertrek.get(poc, state)
+    cmd, state, concerns = hypertrek.get(trek, state)
     assert cmd == hypertrek.RETRY
-    trek_template(poc, state, concerns)
+    trek_template(trek, state, concerns)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
 def post(request, state, inpt):
-    poc = poc_trek()
-    cmd, state, concerns = hypertrek.post(poc, state, inpt)
+    trek = example_trek()
+    cmd, state, concerns = hypertrek.post(trek, state, inpt)
     if cmd == hypertrek.CONTINUE:
-        state = hypertrek.forward(poc, state)
-        cmd, state, concerns = hypertrek.get(poc, state)
+        state = hypertrek.forward(trek, state)
+        cmd, state, concerns = hypertrek.get(trek, state)
 
-    trek_template(poc, state, concerns)
+    trek_template(trek, state, concerns)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
 def bck(request, state):
-    poc = poc_trek()
-    state = hypertrek.backward(poc, state)
-    cmd, state, concerns = hypertrek.get(poc, state)
+    trek = example_trek()
+    state = hypertrek.backward(trek, state)
+    cmd, state, concerns = hypertrek.get(trek, state)
 
-    trek_template(poc, state, concerns)
+    trek_template(trek, state, concerns)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
 def fwd(request, state, inpt):
-    poc = poc_trek()
-    cmd, state, concerns = hypertrek.post(poc, state, inpt)
+    trek = example_trek()
+    cmd, state, concerns = hypertrek.post(trek, state, inpt)
     if cmd == hypertrek.CONTINUE:
-        state = hypertrek.forward(poc, state)
-        cmd, state, concerns = hypertrek.get(poc, state)
+        state = hypertrek.forward(trek, state)
+        cmd, state, concerns = hypertrek.get(trek, state)
 
-    trek_template(poc, state, concerns)
+    trek_template(trek, state, concerns)

@@ -1,7 +1,7 @@
 d = dict
 
 import os, re, calendar
-from example_project.hypergen_first_app.treks import poc_trek
+from example_project.hypergen_first_app.treks import example_trek
 
 from hypergen.imports import dumps
 
@@ -44,8 +44,8 @@ State
     with open("/tmp/hypertrek.log", "w") as f:
         f.write(msg)
 
-def fill_poc_trek():
-    thetrek = poc_trek()
+def fill_example_trek():
+    thetrek = example_trek()
     state = hypertrek.new_state()
     is_done = False
 
@@ -95,4 +95,4 @@ def fill_poc_trek():
     print()
     print("thxbai!")
 
-# fill_poc_trek()
+# fill_example_trek()
