@@ -7,6 +7,21 @@ CONTINUE, RETRY = "CONTINUE", "RETRY"
 
 ### Trek ###
 
+def trek(*, title):
+    hypertrek = d(title=title)
+    def _(f):
+        f.hypertrek = hypertrek
+
+        @curry
+        @wraps(f)
+        def __(*args, **kwargs):
+            return f(*args, **kwargs)
+
+        __.hypertrek = hypertrek
+        return __
+
+    return _
+
 def mark_begin_end(trek, state):
     state["hypertrek"]["at_beginning"] = state["hypertrek"]["i"] == 0
     state["hypertrek"]["at_end"] = state["hypertrek"]["i"] == len(trek) - 1
