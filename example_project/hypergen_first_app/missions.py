@@ -122,7 +122,7 @@ def booking(*, state, method, first, inpt=None, **configuration):
 
     errors = []
 
-    command = trek.RETRY
+    command = hypertrek.RETRY
     if method == "post":
         if inpt.pop("cancel", None):
             state["booking"] = initial.copy()
@@ -133,11 +133,11 @@ def booking(*, state, method, first, inpt=None, **configuration):
         if state["booking"]["time"]:
             if state["booking"]["time"] < 17:
                 state["booking"]["done"] = True
-                command = trek.CONTINUE
+                command = hypertrek.CONTINUE
             else:
                 if state["booking"]["late_ok"] is True:
                     state["booking"]["done"] = True
-                    command = trek.CONTINUE
+                    command = hypertrek.CONTINUE
                 elif state["booking"]["late_ok"] is False:
                     errors.append("Choose an earlier time, then!")
 
@@ -173,9 +173,9 @@ def template_text(title, description):
 @hypertrek.mission(concerns=d(rendering=d(text=template_text, hypergen=template_hypergen)), configurator=None,
                    progress=lambda *a, **kw: (1, 1, 1))
 def template(title, description, *, state, method, first, inpt=None, **configuration):
-    command = trek.RETRY
+    command = hypertrek.RETRY
     if inpt:
-        command = trek.CONTINUE
+        command = hypertrek.CONTINUE
 
     concerns = template.hypertrek["concerns"].copy()
     concerns["rendering"] = {k: v(title, description, **configuration) for k, v in concerns["rendering"].items()}

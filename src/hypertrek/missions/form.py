@@ -107,10 +107,10 @@ def form(form_class, /, *, state, method, first, fields, inpt=None, **configurat
     form_instance = form_class(initial=data if first else None, data=data if not first else None)
 
     if not first and form_instance.is_valid():
-        command = trek.CONTINUE
+        command = hypertrek.CONTINUE
         state.update(form_instance.cleaned_data)
     else:
-        command = trek.RETRY
+        command = hypertrek.RETRY
 
     concerns = form.hypertrek["concerns"].copy()
     concerns["rendering"] = {k: v(form_instance, **configuration) for k, v in concerns["rendering"].items()}

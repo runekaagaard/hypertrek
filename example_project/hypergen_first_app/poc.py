@@ -46,7 +46,7 @@ State
 
 def fill_poc_trek():
     thetrek = poc_trek()
-    state = trek.new_state()
+    state = hypertrek.new_state()
     is_done = False
 
     i = 0
@@ -55,7 +55,7 @@ def fill_poc_trek():
         while True:
             os.system('clear')
 
-            progress = trek.progress(thetrek, state)
+            progress = hypertrek.progress(thetrek, state)
             title = f'Mission: {state["hypertrek"]["i"]+1} of {progress[0]}-{progress[1]}'
             print(title)
             print("=" * len(title))
@@ -63,24 +63,24 @@ def fill_poc_trek():
 
             i += 1
             # Display page
-            cmd, state, concerns = trek.get(thetrek, state)
+            cmd, state, concerns = hypertrek.get(thetrek, state)
             log(inpt, state, cmd, i, direction_change)
             direction_change, inpt = concerns["rendering"]["text"]()
 
             # Validate input
-            cmd, state, concerns = trek.post(thetrek, state, inpt)
+            cmd, state, concerns = hypertrek.post(thetrek, state, inpt)
             log(inpt, state, cmd, i, direction_change)
 
-            if direction_change == trek.BACKWARD:
-                direction = trek.backward
+            if direction_change == hypertrek.BACKWARD:
+                direction = hypertrek.backward
                 break
             else:
-                if direction_change == trek.FORWARD:
+                if direction_change == hypertrek.FORWARD:
                     # When skipping forward, validate with state as input.
                     # TODO: This is wrong!
-                    cmd, state, concerns = trek.post(thetrek, state, state)
-                if cmd == trek.CONTINUE:
-                    direction = trek.forward
+                    cmd, state, concerns = hypertrek.post(thetrek, state, state)
+                if cmd == hypertrek.CONTINUE:
+                    direction = hypertrek.forward
                     break
 
         is_done, state = direction(thetrek, state)

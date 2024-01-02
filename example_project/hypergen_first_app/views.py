@@ -25,7 +25,7 @@ def base_template():
 base_template.target_id = "content"
 
 def trek_template(poc, state, concerns):
-    min_, max_, current = trek.progress(poc, state)
+    min_, max_, current = hypertrek.progress(poc, state)
     progress(value=current / ((max_+min_) / 2), style=d(width="100%"))
     p("On page ", current, " out of minimum ", min_, " and maximum ", max_, ".")
 
@@ -44,35 +44,35 @@ def trek_template(poc, state, concerns):
 @liveview(perm=NO_PERM_REQUIRED, base_template=base_template)
 def get(request):
     poc = poc_trek()
-    state = trek.new_state()
-    cmd, state, concerns = trek.get(poc, state)
-    assert cmd == trek.RETRY
+    state = hypertrek.new_state()
+    cmd, state, concerns = hypertrek.get(poc, state)
+    assert cmd == hypertrek.RETRY
     trek_template(poc, state, concerns)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
 def post(request, state, inpt):
     poc = poc_trek()
-    cmd, state, concerns = trek.post(poc, state, inpt)
-    if cmd == trek.CONTINUE:
-        state = trek.forward(poc, state)
-        cmd, state, concerns = trek.get(poc, state)
+    cmd, state, concerns = hypertrek.post(poc, state, inpt)
+    if cmd == hypertrek.CONTINUE:
+        state = hypertrek.forward(poc, state)
+        cmd, state, concerns = hypertrek.get(poc, state)
 
     trek_template(poc, state, concerns)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
 def bck(request, state):
     poc = poc_trek()
-    state = trek.backward(poc, state)
-    cmd, state, concerns = trek.get(poc, state)
+    state = hypertrek.backward(poc, state)
+    cmd, state, concerns = hypertrek.get(poc, state)
 
     trek_template(poc, state, concerns)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
 def fwd(request, state, inpt):
     poc = poc_trek()
-    cmd, state, concerns = trek.post(poc, state, inpt)
-    if cmd == trek.CONTINUE:
-        state = trek.forward(poc, state)
-        cmd, state, concerns = trek.get(poc, state)
+    cmd, state, concerns = hypertrek.post(poc, state, inpt)
+    if cmd == hypertrek.CONTINUE:
+        state = hypertrek.forward(poc, state)
+        cmd, state, concerns = hypertrek.get(poc, state)
 
     trek_template(poc, state, concerns)
