@@ -7,10 +7,13 @@ CONTINUE, RETRY = "CONTINUE", "RETRY"
 
 ### Trek ###
 
+TREKS = {}
+
 def trek(*, title):
     hypertrek = d(title=title)
     def _(f):
         f.hypertrek = hypertrek
+        TREKS[f] = d(title=title)
 
         @curry
         @wraps(f)
