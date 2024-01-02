@@ -4,8 +4,7 @@ from hypergen.imports import *
 
 import os, re, calendar
 
-from hypertrek.missions import mission
-from hypertrek import trek
+from hypertrek import hypertrek
 from hypertrek.prompt import prompt_value
 
 from django import forms
@@ -114,8 +113,8 @@ def booking_progress(state):
     else:
         return (4, 4, 4)
 
-@mission(concerns=d(rendering=d(text=booking_text, hypergen=booking_hypergen)), configurator=None,
-         progress=booking_progress)
+@hypertrek.mission(concerns=d(rendering=d(text=booking_text, hypergen=booking_hypergen)), configurator=None,
+                   progress=booking_progress)
 def booking(*, state, method, first, inpt=None, **configuration):
     initial = {"month": None, "date": None, "time": None, "late_ok": None, "done": False}
     if "booking" not in state:
@@ -171,8 +170,8 @@ def template_text(title, description):
 
     return _
 
-@mission(concerns=d(rendering=d(text=template_text, hypergen=template_hypergen)), configurator=None,
-         progress=lambda *a, **kw: (1, 1, 1))
+@hypertrek.mission(concerns=d(rendering=d(text=template_text, hypergen=template_hypergen)), configurator=None,
+                   progress=lambda *a, **kw: (1, 1, 1))
 def template(title, description, *, state, method, first, inpt=None, **configuration):
     command = trek.RETRY
     if inpt:

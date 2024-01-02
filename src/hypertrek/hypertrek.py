@@ -1,6 +1,11 @@
+d = dict
+
+from functools import wraps
+from toolz import curry
+
 CONTINUE, RETRY = "CONTINUE", "RETRY"
 
-__all__ = ["CONTINUE", "RETRY", "new_state", "get", "post", "forward", "backward", "progress"]
+### Trek ###
 
 def edges(trek, state):
     state["hypertrek"]["left_edge"] = state["hypertrek"]["i"] == 0
@@ -45,3 +50,20 @@ def progress(trek, state):
             current += current2
 
     return min_, max_, current
+
+### Mission ###
+
+def mission(*, concerns, configurator, progress):
+    hypertrek = d(concerns=concerns, configurator=configurator, progress=progress)
+    def _(f):
+        f.hypertrek = hypertrek
+
+        @curry
+        @wraps(f)
+        def __(*args, **kwargs):
+            return f(*args, **kwargs)
+
+        __.hypertrek = hypertrek
+        return __
+
+    return _

@@ -4,7 +4,7 @@ from termcolor import colored
 from django import forms
 
 from hypertrek.missions import mission
-from hypertrek import trek
+from hypertrek import hypertrek
 
 d = dict
 
