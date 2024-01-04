@@ -121,21 +121,12 @@ def prompt_form(form):
 
     return result
 
-def log(inpt, state, command, i, navigate):
+def log_run_trek(state, inpt):
     msg = f"""
-i == {i}
-command = {command}
-navigate = {navigate}
-    
 Input
 =====
 
 {dumps(inpt, indent=4)}
-
-Command
-=======
-
-{command}
     
 State
 =====
@@ -146,54 +137,36 @@ State
     with open("/tmp/hypertrek.log", "w") as f:
         f.write(msg)
 
-def xrun_trek(trek):
-    state = hypertrek.new_state()
-    is_done = False
+def run_trek(trek):
+    state, is_done, inpt = hypertrek.new_state(), False, None
 
-    i = 0
-    is_done = False
     while not is_done:
-        inpt, navigate = {}, None
-        while True:
-            os.system('clear')
+        cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
+        log_run_trek(state, inpt)
 
-            progress = hypertrek.progress(trek, state)
-            title = f'Mission: {state["hypertrek"]["i"]+1} of {progress[0]}-{progress[1]}'
-            print(title)
-            print("=" * len(title))
-            print()
+        try:
+            while cmd != hypertrek.CONTINUE:
+                os.system('clear')
+                progress = hypertrek.progress(trek, state)
+                title = f'Mission: {state["hypertrek"]["i"]+1} of {progress[0]}-{progress[1]}'
+                print(title)
+                print("=" * len(title))
+                print()
 
-            i += 1
-            # Display page
-            cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
-            log(inpt, state, cmd, i, navigate)
-            try:
                 inpt = mission.as_terminal(*as_args, **as_kwargs)
-            except EOFError as e:
-                navigate = str(e)
-                assert navigate in (FORWARD, BACKWARD)
-
-            # Validate input
-            at_end = state["hypertrek"]["at_end"]
-            cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
-            if at_end and cmd == trek.CONTINUE:
+                cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
+                log_run_trek(state, inpt)
+            if state["hypertrek"]["at_end"]:
                 is_done = True
                 break
-            log(inpt, state, cmd, i, navigate)
-
-            if navigate == BACKWARD:
-                direction = hypertrek.backward
-                break
-            else:
-                if navigate == FORWARD:
-                    # When skipping forward, validate with state as input.
-                    # TODO: This is wrong!
-                    cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, state)
-                if cmd == hypertrek.CONTINUE:
-                    direction = hypertrek.forward
-                    break
-
-        state = direction(trek, state)
+            state = hypertrek.forward(trek, state)
+        except EOFError as e:
+            assert str(e) in (FORWARD, BACKWARD)
+            inpt = None
+            if str(e) == FORWARD:
+                state = hypertrek.forward(trek, state)
+            elif str(e) == BACKWARD:
+                state = hypertrek.backward(trek, state)
 
     os.system('clear')
     title = f"Trek completed"
@@ -204,25 +177,3 @@ def xrun_trek(trek):
     print(dumps(state, indent=4))
     print()
     print("thxbai!")
-
-def run_trek(trek):
-    state, is_done = hypertrek.new_state(), False
-    while not is_done:
-        cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
-        os.system('clear')
-
-        try:
-            while cmd != hypertrek.CONTINUE:
-                os.system('clear')
-                inpt = mission.as_terminal(*as_args, **as_kwargs)
-                cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
-            if state["hypertrek"]["at_end"]:
-                is_done = True
-                break
-            state = hypertrek.forward(trek, state)
-        except EOFError as e:
-            assert str(e) in (FORWARD, BACKWARD)
-            if str(e) == FORWARD:
-                state = hypertrek.forward(trek, state)
-            if str(e) == BACKWARD:
-                state = hypertrek.backward(trek, state)

@@ -53,11 +53,10 @@ class form(hypertrek.mission):
         form_class = self.form_class if self.fields is None else form_factory(self.form_class, self.fields)
         form_instance = form_class(initial=data if first else None, data=data if not first else None)
 
-        if not first and form_instance.is_valid():
+        command = hypertrek.RETRY
+        if method == "post" and not first and form_instance.is_valid():
             command = hypertrek.CONTINUE
             state.update(form_instance.cleaned_data)
-        else:
-            command = hypertrek.RETRY
 
         return command, state, self, ((form_instance,), {})
 

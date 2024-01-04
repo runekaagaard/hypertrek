@@ -103,7 +103,6 @@ class booking(hypertrek.mission):
             return {"late_ok": None}
 
     def as_terminal(self, data, errors):
-        print("WHAT", data, errors)
         if errors:
             for error in errors:
                 print(colored(f"- {error}", 'red'))
