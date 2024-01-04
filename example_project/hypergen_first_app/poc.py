@@ -44,7 +44,7 @@ State
     with open("/tmp/hypertrek.log", "w") as f:
         f.write(msg)
 
-def fill_example_trek():
+def fill_example_trek(trek):
     thetrek = example_trek()
     state = hypertrek.new_state()
     is_done = False

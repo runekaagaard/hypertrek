@@ -3,7 +3,6 @@ from hypergen.imports import raw, form as form_, script
 from hypertrek import hypertrek
 from hypertrek.prompt import prompt_form
 
-from termcolor import colored
 from django import forms
 
 class FormConfigurator(forms.Form):

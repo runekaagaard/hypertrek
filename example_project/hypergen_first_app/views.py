@@ -1,10 +1,13 @@
 d = dict
+from django.shortcuts import render
 from hypergen.imports import *
 
 from contextlib import contextmanager
 
 from hypertrek import hypertrek
 from hypergen_first_app.treks import example_trek
+
+# as_hypergen
 
 @contextmanager
 def base_template():
@@ -76,3 +79,45 @@ def fwd(request, state, inpt):
         cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
 
     trek_template(trek, state, mission, as_args, as_kwargs)
+
+# as_html
+
+def as_html(request):
+    trek = example_trek()
+    state = hypertrek.new_state()
+    cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
+    assert cmd == hypertrek.RETRY
+
+    min_, max_, current = mission.progress(state)
+    progress = current / ((max_+min_) / 2)
+    return render(request, "hypergen_first_app/trek_template.html", {
+        "min": min_,
+        "max": max_,
+        "current": current,
+        "progress": progress
+    })
+
+# def post(request, state, inpt):
+#     trek = example_trek()
+#     cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
+#     if cmd == hypertrek.CONTINUE:
+#         state = hypertrek.forward(trek, state)
+#         cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
+
+#     trek_template(trek, state, mission, as_args, as_kwargs)
+
+# def bck(request, state):
+#     trek = example_trek()
+#     state = hypertrek.backward(trek, state)
+#     cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
+
+#     trek_template(trek, state, mission, as_args, as_kwargs)
+
+# def fwd(request, state, inpt):
+#     trek = example_trek()
+#     cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
+#     if cmd == hypertrek.CONTINUE:
+#         state = hypertrek.forward(trek, state)
+#         cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
+
+#     trek_template(trek, state, mission, as_args, as_kwargs)
