@@ -24,12 +24,12 @@ def base_template():
 
 base_template.target_id = "content"
 
-def trek_template(trek, state, concerns):
+def trek_template(trek, state, mission, as_args, as_kwargs):
     min_, max_, current = hypertrek.progress(trek, state)
     progress(value=current / ((max_+min_) / 2), style=d(width="100%"))
     p("On page ", current, " out of minimum ", min_, " and maximum ", max_, ".")
 
-    inpt = concerns["rendering"]["hypergen"]()
+    inpt = mission.as_hypergen(*as_args, **as_kwargs)
     if not state["hypertrek"]["at_end"]:
         with p():
             button("Send", id_="commit", onclick=callback(post, state, inpt))
@@ -45,34 +45,35 @@ def trek_template(trek, state, concerns):
 def get(request):
     trek = example_trek()
     state = hypertrek.new_state()
-    cmd, state, concerns = hypertrek.get(trek, state)
+    cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
     assert cmd == hypertrek.RETRY
-    trek_template(trek, state, concerns)
+    trek_template(trek, state, mission, as_args, as_kwargs)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
 def post(request, state, inpt):
     trek = example_trek()
-    cmd, state, concerns = hypertrek.post(trek, state, inpt)
+    cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
+    print(cmd, state, mission, (as_args, as_kwargs))
     if cmd == hypertrek.CONTINUE:
         state = hypertrek.forward(trek, state)
-        cmd, state, concerns = hypertrek.get(trek, state)
+        cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
 
-    trek_template(trek, state, concerns)
+    trek_template(trek, state, mission, as_args, as_kwargs)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
 def bck(request, state):
     trek = example_trek()
     state = hypertrek.backward(trek, state)
-    cmd, state, concerns = hypertrek.get(trek, state)
+    cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
 
-    trek_template(trek, state, concerns)
+    trek_template(trek, state, mission, as_args, as_kwargs)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
 def fwd(request, state, inpt):
     trek = example_trek()
-    cmd, state, concerns = hypertrek.post(trek, state, inpt)
+    cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
     if cmd == hypertrek.CONTINUE:
         state = hypertrek.forward(trek, state)
-        cmd, state, concerns = hypertrek.get(trek, state)
+        cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
 
-    trek_template(trek, state, concerns)
+    trek_template(trek, state, mission, as_args, as_kwargs)

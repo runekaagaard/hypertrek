@@ -47,7 +47,7 @@ class ModelFormConfigurator(forms.Form):
         }
 
 @mission(side_effects=d(html=as_html, text=as_text, docs=as_docs), configurator=ModelFormConfigurator)
-def modelform(form, fields, template, /, *, state, inpt, **configuration):
+def modelform(form, fields, template, /, *, state, inpt):
     return state, side_effects
 
 def mytrek():

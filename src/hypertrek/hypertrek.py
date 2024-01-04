@@ -39,14 +39,14 @@ def get(trek, state):
     first = hypertrek["i"] not in hypertrek["visited"]
     hypertrek["visited"].add(hypertrek["i"])
 
-    return trek[hypertrek["i"]](state=state, first=first, method="get")
+    return trek[hypertrek["i"]].execute(state=state, first=first, method="get")
 
 def post(trek, state, inpt):
     hypertrek = state["hypertrek"]
     first = hypertrek["i"] not in hypertrek["visited"]
     hypertrek["visited"].add(hypertrek["i"])
 
-    return trek[hypertrek["i"]](state=state, inpt=inpt, first=first, method="post")
+    return trek[hypertrek["i"]].execute(state=state, inpt=inpt, first=first, method="post")
 
 def forward(trek, state):
     state["hypertrek"]["i"] = min(state["hypertrek"]["i"] + 1, len(trek) - 1)
@@ -61,7 +61,7 @@ def backward(trek, state):
 def progress(trek, state):
     min_, max_, current = 0, 0, 0
     for i, mission in enumerate(trek):
-        min2, max2, current2 = mission._partial.func.hypertrek["progress"](state)
+        min2, max2, current2 = mission.progress(state)
         min_ += min2
         max_ += max2
         if i <= state["hypertrek"]["i"]:
@@ -71,17 +71,15 @@ def progress(trek, state):
 
 ### Mission ###
 
-def mission(*, concerns, configurator, progress):
-    hypertrek = d(concerns=concerns, configurator=configurator, progress=progress)
-    def _(f):
-        f.hypertrek = hypertrek
+class mission():
+    def __init__(self, when=None):
+        self.when = when
 
-        @curry
-        @wraps(f)
-        def __(*args, **kwargs):
-            return f(*args, **kwargs)
+    def progress(self, state):
+        if self.is_visible(state):
+            return (1, 1, 1)
+        else:
+            return (0, 0, 0)
 
-        __.hypertrek = hypertrek
-        return __
-
-    return _
+    def is_visible(self, state):
+        return self.when is None or self.when(state)

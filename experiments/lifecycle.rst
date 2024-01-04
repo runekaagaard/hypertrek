@@ -1,3 +1,3 @@
 
-def form(/, state, inpt, fields=None, **configuration):
+def form(/, state, inpt, fields=None):
      pass

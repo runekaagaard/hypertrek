@@ -1,11 +1,10 @@
-import io
-from termcolor import colored
-
-from django import forms
-
-from hypertrek import hypertrek
-
 d = dict
+from hypergen.imports import raw, form as form_, script
+from hypertrek import hypertrek
+from hypertrek.prompt import prompt_form
+
+from termcolor import colored
+from django import forms
 
 class FormConfigurator(forms.Form):
     # args
@@ -27,13 +26,42 @@ class FormConfigurator(forms.Form):
             for x in ("title", "subtitle", "description", "help_text", "template", "fields")
         }
 
-def text(form):
-    from hypertrek.prompt import prompt_form
-    return lambda: prompt_form(form)
+def form_factory(form_class, fields):
+    class FormFactory(form_class):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
 
-def hypergen(form):
-    from hypergen.imports import raw, form as form_, script
-    def _(id_="hypertrek_form"):
+            self.fields = {k: v for k, v in self.fields.items() if k in fields}
+
+    FormFactory.__name__ = form_class.__name__ + '_Factory'
+
+    return FormFactory
+
+class form(hypertrek.mission):
+    def __init__(self, form_class, fields=None, *args, **kwargs):
+        self.form_class = form_class
+        self.fields = fields
+
+        super().__init__(*args, **kwargs)
+
+    def execute(self, state, method, first, inpt=None):
+        if method == "get":
+            data = {x: state.get(x) for x in self.fields}
+        else:
+            data = inpt
+
+        form_class = self.form_class if self.fields is None else form_factory(self.form_class, self.fields)
+        form_instance = form_class(initial=data if first else None, data=data if not first else None)
+
+        if not first and form_instance.is_valid():
+            command = hypertrek.CONTINUE
+            state.update(form_instance.cleaned_data)
+        else:
+            command = hypertrek.RETRY
+
+        return command, state, self, ((form_instance,), {})
+
+    def as_hypergen(self, form, id_="hypertrek_form"):
         script("""
                 function formValues(formId) {
                     const form = document.getElementById(formId);
@@ -78,40 +106,5 @@ def hypergen(form):
 
         return form_values
 
-    return _
-
-def docs(*t, **tt):
-    return "### docs"
-
-def form_factory(form_class, fields):
-    class FormFactory(form_class):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-
-            self.fields = {k: v for k, v in self.fields.items() if k in fields}
-
-    FormFactory.__name__ = form_class.__name__ + '_Factory'
-
-    return FormFactory
-
-@hypertrek.mission(concerns=d(rendering=d(hypergen=hypergen, text=text, docs=docs)), configurator=FormConfigurator,
-                   progress=lambda state: (1, 1, 1))
-def form(form_class, /, *, state, method, first, fields, inpt=None, **configuration):
-    if method == "get":
-        data = {x: state.get(x) for x in fields}
-    else:
-        data = inpt
-
-    form_class = form_class if fields is None else form_factory(form_class, fields)
-    form_instance = form_class(initial=data if first else None, data=data if not first else None)
-
-    if not first and form_instance.is_valid():
-        command = hypertrek.CONTINUE
-        state.update(form_instance.cleaned_data)
-    else:
-        command = hypertrek.RETRY
-
-    concerns = form.hypertrek["concerns"].copy()
-    concerns["rendering"] = {k: v(form_instance, **configuration) for k, v in concerns["rendering"].items()}
-
-    return command, state, concerns
+    def as_terminal(self, form):
+        return prompt_form(form)

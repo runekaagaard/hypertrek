@@ -20,8 +20,89 @@ BOOKINGS = [
     [(x, f"{x}:00-{x+1}:00") for x in range(9, 18)],
 ]
 
-def booking_text(data, errors, **configuration):
-    def _():
+class booking(hypertrek.mission):
+    def execute(self, *, state, method, first, inpt=None):
+        initial = {"month": None, "date": None, "time": None, "late_ok": None, "done": False}
+        if "booking" not in state:
+            state["booking"] = initial.copy()
+
+        errors = []
+
+        command = hypertrek.RETRY
+        if method == "post":
+            if inpt.pop("cancel", None):
+                state["booking"] = initial.copy()
+            else:
+                state["booking"].update(inpt)
+
+            if state["booking"]["time"]:
+                if state["booking"]["time"] < 17:
+                    state["booking"]["done"] = True
+                    command = hypertrek.CONTINUE
+                else:
+                    if state["booking"]["late_ok"] is True:
+                        state["booking"]["done"] = True
+                        command = hypertrek.CONTINUE
+                    elif state["booking"]["late_ok"] is False:
+                        errors.append("Choose an earlier time, then!")
+
+        return command, state, self, ((state["booking"], errors), {})
+
+    def progress(self, state):
+        if "booking" not in state:
+            return (3, 4, None)
+
+        if not state["booking"]["month"]:
+            return (3, 4, 1)
+        elif not state["booking"]["date"]:
+            return (3, 4, 2)
+        elif not state["booking"]["time"]:
+            return (3, 4, 3)
+
+        if state["booking"]["time"] < 17:
+            return (3, 3, 3)
+        else:
+            return (4, 4, 4)
+
+    def as_hypergen(self, data, errors):
+        def render_options(name, title, i):
+            label(title)
+            with div():
+                value = select([option(b, value=a) for a, b in BOOKINGS[i]], name=name, id_="booking_value",
+                               coerce_to=int)
+
+            return {name: value}
+
+        if data["done"]:
+            p("You booked: ", data["date"], " / ", data["month"], " at ",
+              [b for a, b in BOOKINGS[2] if a == data["time"]][0])
+            label("Cancel?")
+            with div():
+                value = input_(type_="checkbox", id_="booking_value")
+
+                return {"cancel": value}
+
+        with ul(class_="errorlist"):
+            for error in errors:
+                li(error)
+
+        if not data["month"]:
+            return render_options("month", "Select month", 0)
+        elif not data["date"]:
+            return render_options("date", "Select date", 1)
+        elif not data["time"]:
+            return render_options("time", "Select time for appointment", 2)
+        else:
+            if data["time"] > 16:
+                label("Are you OK with a late booking?")
+                with div():
+                    value = input_(type_="checkbox", id_="booking_value")
+
+                return {"late_ok": value}
+
+            return {"late_ok": None}
+
+    def as_terminal(self, data, errors):
         if errors:
             for error in errors:
                 print(colored(f"- {error}", 'red'))
@@ -54,130 +135,34 @@ def booking_text(data, errors, **configuration):
 
         return None, {"booking": {"month": value1, "date": value2, "time": value3, "late_ok": value4}}
 
-    return _
+class template(hypertrek.mission):
+    def __init__(self, title, description, *args, **kwargs):
+        self.title = title
+        self.description = description
 
-def booking_hypergen(data, errors, **configuration):
-    def render_options(name, title, i):
-        label(title)
-        with div():
-            value = select([option(b, value=a) for a, b in BOOKINGS[i]], name=name, id_="booking_value",
-                           coerce_to=int)
+        super().__init__(*args, **kwargs)
 
-        return {name: value}
+    def execute(self, state, method, first, inpt=None):
+        command = hypertrek.RETRY
+        if inpt:
+            command = hypertrek.CONTINUE
 
-    def _():
-        if data["done"]:
-            p("You booked: ", data["date"], " / ", data["month"], " at ",
-              [b for a, b in BOOKINGS[2] if a == data["time"]][0])
-            label("Cancel?")
-            with div():
-                value = input_(type_="checkbox", id_="booking_value")
+        return command, state, self, (tuple(), {})
 
-                return {"cancel": value}
-
-        with ul(class_="errorlist"):
-            for error in errors:
-                li(error)
-
-        if not data["month"]:
-            return render_options("month", "Select month", 0)
-        elif not data["date"]:
-            return render_options("date", "Select date", 1)
-        elif not data["time"]:
-            return render_options("time", "Select time for appointment", 2)
-        else:
-            if data["time"] > 16:
-                label("Are you OK with a late booking?")
-                with div():
-                    value = input_(type_="checkbox", id_="booking_value")
-
-                return {"late_ok": value}
-
-            return {"late_ok": None}
-
-    return _
-
-def booking_progress(state):
-    if "booking" not in state:
-        return (3, 4, None)
-
-    if not state["booking"]["month"]:
-        return (3, 4, 1)
-    elif not state["booking"]["date"]:
-        return (3, 4, 2)
-    elif not state["booking"]["time"]:
-        return (3, 4, 3)
-
-    if state["booking"]["time"] < 17:
-        return (3, 3, 3)
-    else:
-        return (4, 4, 4)
-
-@hypertrek.mission(concerns=d(rendering=d(text=booking_text, hypergen=booking_hypergen)), configurator=None,
-                   progress=booking_progress)
-def booking(*, state, method, first, inpt=None, **configuration):
-    initial = {"month": None, "date": None, "time": None, "late_ok": None, "done": False}
-    if "booking" not in state:
-        state["booking"] = initial.copy()
-
-    errors = []
-
-    command = hypertrek.RETRY
-    if method == "post":
-        if inpt.pop("cancel", None):
-            state["booking"] = initial.copy()
-            print("FOO", state["booking"])
-        else:
-            state["booking"].update(inpt)
-
-        if state["booking"]["time"]:
-            if state["booking"]["time"] < 17:
-                state["booking"]["done"] = True
-                command = hypertrek.CONTINUE
-            else:
-                if state["booking"]["late_ok"] is True:
-                    state["booking"]["done"] = True
-                    command = hypertrek.CONTINUE
-                elif state["booking"]["late_ok"] is False:
-                    errors.append("Choose an earlier time, then!")
-
-    concerns = booking.hypertrek["concerns"].copy()
-    concerns["rendering"] = {
-        k: v(state["booking"], errors, **configuration) for k, v in concerns["rendering"].items()
-    }
-
-    return command, state, concerns
-
-### Template mission ###
-
-def template_hypergen(title, description):
-    def _():
-        h2(title)
-        p(description)
+    def as_hypergen(self, *args, **kwargs):
+        h2(self.title)
+        p(self.description)
 
         return True
 
-    return _
+    def as_html(self, *args, **kwargs):
+        return "todo"
 
-def template_text(title, description):
-    def _():
-        print(colored(title, attrs=["bold"]))
+    def as_terminal(self, *args, **kwargs):
+        # TODO.
+        print(colored(self.title, attrs=["bold"]))
         print()
-        print(description)
+        print(self.description)
         print()
         direction_change, _ = prompt_value("Press enter to continue", required=False)
         return direction_change, True
-
-    return _
-
-@hypertrek.mission(concerns=d(rendering=d(text=template_text, hypergen=template_hypergen)), configurator=None,
-                   progress=lambda *a, **kw: (1, 1, 1))
-def template(title, description, *, state, method, first, inpt=None, **configuration):
-    command = hypertrek.RETRY
-    if inpt:
-        command = hypertrek.CONTINUE
-
-    concerns = template.hypertrek["concerns"].copy()
-    concerns["rendering"] = {k: v(title, description, **configuration) for k, v in concerns["rendering"].items()}
-
-    return command, state, concerns
