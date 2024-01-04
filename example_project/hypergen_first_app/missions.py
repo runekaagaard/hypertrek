@@ -50,7 +50,7 @@ class booking(hypertrek.mission):
 
     def progress(self, state):
         if "booking" not in state:
-            return (3, 4, None)
+            return (3, 4, 0)
 
         if not state["booking"]["month"]:
             return (3, 4, 1)
@@ -103,6 +103,7 @@ class booking(hypertrek.mission):
             return {"late_ok": None}
 
     def as_terminal(self, data, errors):
+        print("WHAT", data, errors)
         if errors:
             for error in errors:
                 print(colored(f"- {error}", 'red'))
@@ -112,28 +113,16 @@ class booking(hypertrek.mission):
                 print(f"{k}: {v}")
             print()
 
-        direction_change, value1 = prompt_value("month", data.get("month"), value_type=int, choices=BOOKINGS[0],
-                                                required=True)
-        if direction_change:
-            return direction_change, None
-        direction_change, value2 = prompt_value("date", data.get("date"), value_type=int, choices=BOOKINGS[1],
-                                                required=True)
-        if direction_change:
-            return direction_change, None
-        direction_change, value3 = prompt_value("time", data.get("time"), value_type=int, choices=BOOKINGS[2],
-                                                required=True)
-        if direction_change:
-            return direction_change, None
+        value1 = prompt_value("month", data.get("month"), value_type=int, choices=BOOKINGS[0], required=True)
+        value2 = prompt_value("date", data.get("date"), value_type=int, choices=BOOKINGS[1], required=True)
+        value3 = prompt_value("time", data.get("time"), value_type=int, choices=BOOKINGS[2], required=True)
+        value4 = None
         if value3 > 16:
-            direction_change, value4 = prompt_value("Is it OK it's late?", data.get("late_ok"), value_type=int,
-                                                    choices=((0, "Nope!"), (1, "Yep!")), required=True)
-            value4 = bool(value4)
-            if direction_change:
-                return direction_change, None
-        else:
-            value4 = None
+            value4 = bool(
+                prompt_value("Is it OK it's late?", data.get("late_ok"), value_type=int,
+                             choices=((0, "Nope!"), (1, "Yep!")), required=True))
 
-        return None, {"booking": {"month": value1, "date": value2, "time": value3, "late_ok": value4}}
+        return {"month": value1, "date": value2, "time": value3, "late_ok": value4}
 
 class template(hypertrek.mission):
     def __init__(self, title, description, *args, **kwargs):
@@ -144,7 +133,7 @@ class template(hypertrek.mission):
 
     def execute(self, state, method, first, inpt=None):
         command = hypertrek.RETRY
-        if inpt:
+        if method == "post":
             command = hypertrek.CONTINUE
 
         return command, state, self, (tuple(), {})
@@ -159,10 +148,10 @@ class template(hypertrek.mission):
         return "todo"
 
     def as_terminal(self, *args, **kwargs):
-        # TODO.
         print(colored(self.title, attrs=["bold"]))
         print()
         print(self.description)
         print()
-        direction_change, _ = prompt_value("Press enter to continue", required=False)
-        return direction_change, True
+        prompt_value("Press enter to continue", required=False)
+
+        return True

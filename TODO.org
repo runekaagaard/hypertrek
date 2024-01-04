@@ -3,15 +3,16 @@
 - terminal
 - hypergen html
 - vanilla django html
-** TODO Figure out how to pass templates to renderers.
-** TODO Trek register
+** DONE Figure out how to pass templates to renderers.
+** DONE Trek register
 ** TODO Create these management commands:
-- hypertrek_list_treks
-- hypertrek_run_trek TREKNAME
-- hypertrek_display_trek TREKNAME
+*** DONE hypertrek_list_treks
+*** TODO hypertrek_run_trek TREKNAME
+*** TODO hypertrek_display_trek TREKNAME
 ** TODO Fix terminal mode regressions.
 ** TODO Configuration
 ** TODO UI
+** DONE When control flow
 ** DONE Multipage pagenumber ranges
 ** DONE Make multipage for a single mission work.
 ** DONE Add first page last page to state.

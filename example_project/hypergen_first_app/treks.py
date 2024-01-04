@@ -12,19 +12,26 @@ def example_trek():
         template("This is the beginning", "Lets go!"),
         ms.form.form(ExampleForm, fields=["name", "description"]),
         ms.form.form(ExampleForm, fields=["options"]),
-        template("This is the middle", "Super great!"),
         booking(),
+        template("This is the middle", "Super great!"),
         ms.form.form(ExampleForm, fields=["num_int", "num_float"]),
         *sub_trek(),
         template("This is the ending", "Finally!"),
     ]
+
+def when(state):
+    q1 = state.get("q1")
+    if q1 is None:
+        return hypertrek.UNDECIDABLE
+    else:
+        return state.get("q1") == "5"
 
 @hypertrek.trek(title="Sub Trek")
 def sub_trek():
     return [
         template("Easy Peasy", "Lets go!"),
         ms.form.form(WHO5Form, fields=["q1"]),
-        ms.form.form(WHO5Form, fields=["q2"], when=lambda state: state.get("q1") == 5),
+        ms.form.form(WHO5Form, fields=["q2"], when=when),
         ms.form.form(WHO5Form, fields=["q3"]),
         ms.form.form(WHO5Form, fields=["q4"]),
         ms.form.form(WHO5Form, fields=["q5"]),

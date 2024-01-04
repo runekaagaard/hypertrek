@@ -53,7 +53,6 @@ def get(request):
 def post(request, state, inpt):
     trek = example_trek()
     cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
-    print(cmd, state, mission, (as_args, as_kwargs))
     if cmd == hypertrek.CONTINUE:
         state = hypertrek.forward(trek, state)
         cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)

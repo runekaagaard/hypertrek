@@ -1,17 +1,20 @@
-from prompt_toolkit import PromptSession, prompt
+import os
+
+from hypergen.imports import dumps
+
+from prompt_toolkit import prompt
 from prompt_toolkit.completion import FuzzyWordCompleter
-from prompt_toolkit.input.defaults import create_input
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.output.defaults import create_output
-from prompt_toolkit.shortcuts import PromptSession
 from prompt_toolkit.validation import ValidationError as PTValidationError, Validator
-from termcolor import colored
 from prompt_toolkit import print_formatted_text, ANSI
-from prompt_toolkit.application import run_in_terminal
 from prompt_toolkit.application.current import get_app
+
+from termcolor import colored
 
 from django import forms
 from django.forms import ValidationError
+
+from hypertrek import hypertrek
 
 BACKWARD, FORWARD = "BACKWARD", "FORWARD"
 
@@ -63,18 +66,9 @@ def prompt_value(label, default="", value_type=str, max_length=None, multiline=F
     if choices:
         completer = FuzzyWordCompleter([f"{k}: {v}" for k, v in choices])
 
-    try:
-        return None, value_type(
-            prmpt(ANSI(prompt_text), validator=Validate(), multiline=multiline, mouse_support=True,
-                  default=str(default) if default else "", completer=completer, key_bindings=bindings))
-    except EOFError as e:
-        match str(e):
-            case "FORWARD":
-                return FORWARD, None
-            case "BACKWARD":
-                return BACKWARD, None
-            case _:
-                raise Exception("Unknown EOFError")
+    return value_type(
+        prmpt(ANSI(prompt_text), validator=Validate(), multiline=multiline, mouse_support=True,
+              default=str(default) if default else "", completer=completer, key_bindings=bindings))
 
 def prompt_field(form, field_name):
     field = form.fields[field_name]
@@ -123,16 +117,112 @@ def prompt_form(form):
 
     result = {}
     for field_name in form.fields.keys():
-        direction_change, value = prompt_field(form, field_name)
-        if direction_change is not None:
-            return direction_change, result
-        result[field_name] = value
+        result[field_name] = prompt_field(form, field_name)
 
-    return None, result
+    return result
 
-# import django
-# from django import forms
-# from django.conf import settings
+def log(inpt, state, command, i, navigate):
+    msg = f"""
+i == {i}
+command = {command}
+navigate = {navigate}
+    
+Input
+=====
 
-# settings.configure(DEBUG=True, SECRET_KEY='ssh', ROOT_URLCONF=__name__)
-# django.setup()
+{dumps(inpt, indent=4)}
+
+Command
+=======
+
+{command}
+    
+State
+=====
+
+{dumps(state, indent=4)}
+    """.strip()
+
+    with open("/tmp/hypertrek.log", "w") as f:
+        f.write(msg)
+
+def xrun_trek(trek):
+    state = hypertrek.new_state()
+    is_done = False
+
+    i = 0
+    is_done = False
+    while not is_done:
+        inpt, navigate = {}, None
+        while True:
+            os.system('clear')
+
+            progress = hypertrek.progress(trek, state)
+            title = f'Mission: {state["hypertrek"]["i"]+1} of {progress[0]}-{progress[1]}'
+            print(title)
+            print("=" * len(title))
+            print()
+
+            i += 1
+            # Display page
+            cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
+            log(inpt, state, cmd, i, navigate)
+            try:
+                inpt = mission.as_terminal(*as_args, **as_kwargs)
+            except EOFError as e:
+                navigate = str(e)
+                assert navigate in (FORWARD, BACKWARD)
+
+            # Validate input
+            at_end = state["hypertrek"]["at_end"]
+            cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
+            if at_end and cmd == trek.CONTINUE:
+                is_done = True
+                break
+            log(inpt, state, cmd, i, navigate)
+
+            if navigate == BACKWARD:
+                direction = hypertrek.backward
+                break
+            else:
+                if navigate == FORWARD:
+                    # When skipping forward, validate with state as input.
+                    # TODO: This is wrong!
+                    cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, state)
+                if cmd == hypertrek.CONTINUE:
+                    direction = hypertrek.forward
+                    break
+
+        state = direction(trek, state)
+
+    os.system('clear')
+    title = f"Trek completed"
+    print(title)
+    print("=" * len(title))
+
+    print()
+    print(dumps(state, indent=4))
+    print()
+    print("thxbai!")
+
+def run_trek(trek):
+    state, is_done = hypertrek.new_state(), False
+    while not is_done:
+        cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
+        os.system('clear')
+
+        try:
+            while cmd != hypertrek.CONTINUE:
+                os.system('clear')
+                inpt = mission.as_terminal(*as_args, **as_kwargs)
+                cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
+            if state["hypertrek"]["at_end"]:
+                is_done = True
+                break
+            state = hypertrek.forward(trek, state)
+        except EOFError as e:
+            assert str(e) in (FORWARD, BACKWARD)
+            if str(e) == FORWARD:
+                state = hypertrek.forward(trek, state)
+            if str(e) == BACKWARD:
+                state = hypertrek.backward(trek, state)

@@ -3,7 +3,7 @@ d = dict
 from functools import wraps
 from toolz import curry
 
-CONTINUE, RETRY = "CONTINUE", "RETRY"
+CONTINUE, RETRY, UNDECIDABLE = "CONTINUE", "RETRY", "UNDECIDABLE"
 
 ### Trek ###
 
@@ -49,14 +49,19 @@ def post(trek, state, inpt):
     return trek[hypertrek["i"]].execute(state=state, inpt=inpt, first=first, method="post")
 
 def forward(trek, state):
-    state["hypertrek"]["i"] = min(state["hypertrek"]["i"] + 1, len(trek) - 1)
-
-    return mark_begin_end(trek, state)
+    hypertrek = state["hypertrek"]
+    while True:
+        hypertrek["i"] = min(hypertrek["i"] + 1, len(trek) - 1)
+        if hypertrek["i"] == len(trek) - 1 or trek[hypertrek["i"]].is_visible(state):
+            return mark_begin_end(trek, state)
 
 def backward(trek, state):
-    state["hypertrek"]["i"] = max(state["hypertrek"]["i"] - 1, 0)
+    hypertrek = state["hypertrek"]
 
-    return mark_begin_end(trek, state)
+    while True:
+        hypertrek["i"] = max(hypertrek["i"] - 1, 0)
+        if hypertrek["i"] == 0 or trek[hypertrek["i"]].is_visible(state):
+            return mark_begin_end(trek, state)
 
 def progress(trek, state):
     min_, max_, current = 0, 0, 0
@@ -76,10 +81,18 @@ class mission():
         self.when = when
 
     def progress(self, state):
-        if self.is_visible(state):
+        is_visible = self.is_visible(state)
+        if is_visible == UNDECIDABLE:
+            return (0, 1, 0)
+        elif is_visible is True:
             return (1, 1, 1)
-        else:
+        elif is_visible is False:
             return (0, 0, 0)
+        else:
+            raise Exception(f"Invalid return value: {repr(is_visible)} from is_visible")
 
     def is_visible(self, state):
-        return self.when is None or self.when(state)
+        if self.when is None:
+            return True
+        else:
+            return self.when(state)
