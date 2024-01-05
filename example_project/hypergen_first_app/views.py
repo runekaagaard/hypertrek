@@ -105,7 +105,7 @@ def as_html(request):
     else:
         raise Exception("Invalid method")
 
-    min_, max_, current = mission.progress(state)
+    min_, max_, current = hypertrek.progress(trek, state)
     progress = current / ((max_+min_) / 2)
     return render(
         request, "hypergen_first_app/trek_template.html", {
@@ -116,28 +116,3 @@ def as_html(request):
             "mission_html": mission.as_html(*as_args, **as_kwargs),
             "state": dumps(state, indent=4),
         })
-
-# def post(request, state, inpt):
-#     trek = example_trek()
-#     cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
-#     if cmd == hypertrek.CONTINUE:
-#         state = hypertrek.forward(trek, state)
-#         cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
-
-#     trek_template(trek, state, mission, as_args, as_kwargs)
-
-# def bck(request, state):
-#     trek = example_trek()
-#     state = hypertrek.backward(trek, state)
-#     cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
-
-#     trek_template(trek, state, mission, as_args, as_kwargs)
-
-# def fwd(request, state, inpt):
-#     trek = example_trek()
-#     cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
-#     if cmd == hypertrek.CONTINUE:
-#         state = hypertrek.forward(trek, state)
-#         cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
-
-#     trek_template(trek, state, mission, as_args, as_kwargs)
