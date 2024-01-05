@@ -13,7 +13,7 @@
 
 <h1>Hypertrek HTML Example</h1>
 
-<form method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data" novalidate>
   {% csrf_token %}
   
   <progress value="{{progress}}"></progress>
@@ -25,11 +25,11 @@
 
   <p>
     {% if not at_beginning %}
-      <button type="submit" name="action" value="previous"><-</button>
+      <button type="submit" name="action" value="backward"><-</button>
     {% endif %}
     <span> </span>
     {% if not at_end %}
-      <button type="submit" name="action" value="next">-></button>
+      <button type="submit" name="action" value="forward">-></button>
     {% endif %}
   </p>
 

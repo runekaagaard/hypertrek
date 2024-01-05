@@ -90,11 +90,17 @@ def as_html(request):
         assert cmd == hypertrek.RETRY
     elif request.method == "POST":
         state, action = loads(request.POST["state"]), request.POST["action"]
-        inpt = hypertrek.input_from_request(trek, state, request)
-        cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
-        if cmd == hypertrek.CONTINUE:
-            state = hypertrek.forward(trek, state)
+        if action in ("send", "forward"):
+            inpt = hypertrek.input_from_request(trek, state, request)
+            cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
+            if cmd == hypertrek.CONTINUE:
+                state = hypertrek.forward(trek, state)
+                cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
+        elif action == "backward":
+            state = hypertrek.backward(trek, state)
             cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
+        else:
+            raise Exception("Invalid action")
 
     else:
         raise Exception("Invalid method")

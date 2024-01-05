@@ -114,6 +114,7 @@ class booking(hypertrek.mission):
                 "date": to_int(request.POST.get("date", "rm")),
                 "time": to_int(request.POST.get("time", "rm")),
                 "late_ok": request.POST.get("late_ok") == "on",
+                "cancel": True if request.POST.get("cancel") == "on" else "rm",
             }.items() if v != "rm"
         }
 
