@@ -1,5 +1,6 @@
 d = dict
 
+from django.contrib.admin.options import mark_safe
 from hypergen.imports import *
 
 import os, re, calendar
@@ -9,6 +10,7 @@ from hypertrek.prompt import prompt_value
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.template.loader import render_to_string
 
 from termcolor import colored
 
@@ -102,6 +104,26 @@ class booking(hypertrek.mission):
 
             return {"late_ok": None}
 
+    def input_from_request(self, request):
+        def to_int(x):
+            return x if x == "rm" else int(x)
+
+        return {
+            k: v for k, v in {
+                "month": to_int(request.POST.get("month", "rm")),
+                "date": to_int(request.POST.get("date", "rm")),
+                "time": to_int(request.POST.get("time", "rm")),
+                "late_ok": request.POST.get("late_ok") == "on",
+            }.items() if v != "rm"
+        }
+
+    def as_html(self, data, errors):
+        return render_to_string("hypergen_first_app/booking.html", {
+            "data": data,
+            "errors": errors,
+            "bookings": BOOKINGS
+        })
+
     def as_terminal(self, data, errors):
         if errors:
             for error in errors:
@@ -143,8 +165,11 @@ class template(hypertrek.mission):
 
         return True
 
+    def input_from_request(self, request):
+        return True
+
     def as_html(self, *args, **kwargs):
-        return "todo"
+        return mark_safe(f"<h2>{self.title}</h2><p>{self.description}</p>")
 
     def as_terminal(self, *args, **kwargs):
         print(colored(self.title, attrs=["bold"]))

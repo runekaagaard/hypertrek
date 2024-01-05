@@ -84,18 +84,32 @@ def fwd(request, state, inpt):
 
 def as_html(request):
     trek = example_trek()
-    state = hypertrek.new_state()
-    cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
-    assert cmd == hypertrek.RETRY
+    if request.method == "GET":
+        state = hypertrek.new_state()
+        cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
+        assert cmd == hypertrek.RETRY
+    elif request.method == "POST":
+        state, action = loads(request.POST["state"]), request.POST["action"]
+        inpt = hypertrek.input_from_request(trek, state, request)
+        cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
+        if cmd == hypertrek.CONTINUE:
+            state = hypertrek.forward(trek, state)
+            cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
+
+    else:
+        raise Exception("Invalid method")
 
     min_, max_, current = mission.progress(state)
     progress = current / ((max_+min_) / 2)
-    return render(request, "hypergen_first_app/trek_template.html", {
-        "min": min_,
-        "max": max_,
-        "current": current,
-        "progress": progress
-    })
+    return render(
+        request, "hypergen_first_app/trek_template.html", {
+            "min": min_,
+            "max": max_,
+            "current": current,
+            "progress": progress,
+            "mission_html": mission.as_html(*as_args, **as_kwargs),
+            "state": dumps(state, indent=4),
+        })
 
 # def post(request, state, inpt):
 #     trek = example_trek()

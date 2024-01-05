@@ -104,5 +104,14 @@ class form(hypertrek.mission):
 
         return form_values
 
+    def input_from_request(self, request):
+        return {
+            name: field.widget.value_from_datadict(request.POST, request.FILES, name)
+            for name, field in self.form_class().fields.items() if self.fields is None or name in self.fields
+        }
+
+    def as_html(self, form):
+        return form.as_div()
+
     def as_terminal(self, form):
         return prompt_form(form)

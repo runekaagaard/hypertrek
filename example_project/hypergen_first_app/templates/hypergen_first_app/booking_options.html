@@ -1,0 +1,8 @@
+<label>{{ title }}</label>
+<div>
+    <select name="{{ name }}" id="booking_value">
+        {% for a, b in items %}
+            <option value="{{ a }}">{{ b }}</option>
+        {% endfor %}
+    </select>
+</div>

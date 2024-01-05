@@ -1,0 +1,28 @@
+{% if data.done %}
+    <p>You booked: {{ data.date }} / {{ data.month }} at {{ data.time }}</p>
+    <label>Cancel?</label>
+    <div>
+        <input type="checkbox" id="booking_value" name="cancel">
+    </div>
+{% else %}
+    <ul class="errorlist">
+        {% for error in errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+
+    {% if not data.month %}
+        {% include "hypergen_first_app/booking_options.html" with items=bookings.0 name="month" title="Select month" %}
+    {% elif not data.date %}
+        {% include "hypergen_first_app/booking_options.html" with items=bookings.1 name="date" title="Select date" %}
+    {% elif not data.time %}
+        {% include "hypergen_first_app/booking_options.html" with items=bookings.2 name="time" title="Select time for appointment" %}
+    {% else %}
+        {% if data.time > 16 %}
+            <label>Are you OK with a late booking?</label>
+            <div>
+                <input type="checkbox" id="booking_value" name="late_ok">
+            </div>
+        {% endif %}
+    {% endif %}
+{% endif %}

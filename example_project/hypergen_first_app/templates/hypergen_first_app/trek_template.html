@@ -4,7 +4,7 @@
   <title>Trek Template</title>
   <link rel="stylesheet" type="text/css" href="https://unpkg.com/simpledotcss@2.0.7/simple.min.css"></link>
   <style>
-    progress {
+    progress, #state {
         width: 100%;
     }
   </style>
@@ -13,24 +13,28 @@
 
 <h1>Hypertrek HTML Example</h1>
 
-<form method="post">
+<form method="post" enctype="multipart/form-data">
   {% csrf_token %}
+  
   <progress value="{{progress}}"></progress>
   <p>On page {{ current }} out of minimum {{ min }} and maximum {{ max }}.</p>
 
-  {{ mission_form.as_p }}
+  {{ mission_html|safe }}
 
   <p><button type="submit" name="action" value="send">Send</button></p>
 
   <p>
-      {% if not at_beginning %}
-          <button type="submit" name="action" value="previous"><-</button>
-      {% endif %}
-      <span> </span>
-      {% if not at_end %}
-          <button type="submit" name="action" value="next">-></button>
-      {% endif %}
+    {% if not at_beginning %}
+      <button type="submit" name="action" value="previous"><-</button>
+    {% endif %}
+    <span> </span>
+    {% if not at_end %}
+      <button type="submit" name="action" value="next">-></button>
+    {% endif %}
   </p>
+
+  <label>State</label>
+  <textarea id="state" name="state" rows="40" readonly>{{state}}</textarea>
 </form>
 
 </body>

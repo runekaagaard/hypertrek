@@ -74,6 +74,11 @@ def progress(trek, state):
 
     return min_, max_, current
 
+def input_from_request(trek, state, request):
+    assert request.method == "POST"
+    hypertrek = state["hypertrek"]
+    return trek[hypertrek["i"]].input_from_request(request)
+
 ### Mission ###
 
 class mission():
