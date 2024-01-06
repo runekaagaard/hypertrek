@@ -1,7 +1,6 @@
 d = dict
 
 from functools import wraps
-from toolz import curry
 
 CONTINUE, RETRY, UNDECIDABLE = "CONTINUE", "RETRY", "UNDECIDABLE"
 
@@ -15,7 +14,6 @@ def trek(*, title):
         f.hypertrek = hypertrek
         TREKS[f] = d(title=title)
 
-        @curry
         @wraps(f)
         def __(*args, **kwargs):
             return f(*args, **kwargs)
@@ -24,12 +22,6 @@ def trek(*, title):
         return __
 
     return _
-
-def mark_begin_end(trek, state):
-    state["hypertrek"]["at_beginning"] = state["hypertrek"]["i"] == 0
-    state["hypertrek"]["at_end"] = state["hypertrek"]["i"] == len(trek) - 1
-
-    return state
 
 def new_state():
     return {"hypertrek": {"i": 0, "visited": set(), "at_beginning": True, "at_end": False}}
@@ -78,6 +70,12 @@ def input_from_request(trek, state, request):
     assert request.method == "POST"
     hypertrek = state["hypertrek"]
     return trek[hypertrek["i"]].input_from_request(request)
+
+def mark_begin_end(trek, state):
+    state["hypertrek"]["at_beginning"] = state["hypertrek"]["i"] == 0
+    state["hypertrek"]["at_end"] = state["hypertrek"]["i"] == len(trek) - 1
+
+    return state
 
 ### Mission ###
 

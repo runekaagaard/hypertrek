@@ -2,6 +2,7 @@ d = dict
 from hypergen.imports import raw, form as form_, script
 from hypertrek import hypertrek
 from hypertrek.prompt import prompt_form
+from hypertrek.missions import templates
 
 from django import forms
 
@@ -37,9 +38,10 @@ def form_factory(form_class, fields):
     return FormFactory
 
 class form(hypertrek.mission):
-    def __init__(self, form_class, fields=None, *args, **kwargs):
+    def __init__(self, form_class, fields=None, hypergen_template=templates.form_mission, *args, **kwargs):
         self.form_class = form_class
         self.fields = fields
+        self.hypergen_template = hypergen_template
 
         super().__init__(*args, **kwargs)
 
@@ -59,50 +61,8 @@ class form(hypertrek.mission):
 
         return command, state, self, ((form_instance,), {})
 
-    def as_hypergen(self, form, id_="hypertrek_form"):
-        script("""
-                function formValues(formId) {
-                    const form = document.getElementById(formId);
-                    const data = {};
-
-                    Array.from(form.elements).forEach(element => {
-                        if (element.name && !element.disabled) {
-                            switch (element.type) {
-                                case 'checkbox':
-                                    data[element.name] = element.checked;
-                                    break;
-                                case 'number':
-                                    data[element.name] = element.step && element.step === '1'
-                                        ? parseInt(element.value)
-                                        : parseFloat(element.value);
-                                    break;
-                                case 'radio':
-                                    if (element.checked) {
-                                        data[element.name] = isNaN(parseInt(element.value))
-                                            ? element.value
-                                            : parseInt(element.value);
-                                    }
-                                    break;
-                                case 'select-one':
-                                case 'select-multiple':
-                                    const selectedValue = element.options[element.selectedIndex].value;
-                                    data[element.name] = isNaN(parseInt(selectedValue))
-                                        ? selectedValue
-                                        : parseInt(selectedValue);
-                                    break;
-                                default:
-                                    data[element.name] = element.value;
-                            }
-                        }
-                    });
-
-                    return data;
-                }
-            """)
-        with form_(id_=id_, js_value_func="formValues") as form_values:
-            raw(form.as_div())
-
-        return form_values
+    def as_hypergen(self, form):
+        return self.hypergen_template(form, id_="hypertrek_form")
 
     def input_from_request(self, request):
         return {
