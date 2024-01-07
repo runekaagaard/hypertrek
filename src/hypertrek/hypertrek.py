@@ -2,8 +2,7 @@ d = dict
 
 from hypergen.imports import loads, dumps
 
-import os
-
+import os, fcntl
 from functools import wraps
 from uuid import uuid4
 
@@ -112,7 +111,9 @@ class JsonStore:
         self.ensure_path()
 
         with open(self.get_path(), "w") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
             f.write(dumps(state))
+            fcntl.flock(f, fcntl.LOCK_UN)
 
 ## Helpers ##
 
