@@ -28,11 +28,19 @@ def base_template():
     script("""
             document.addEventListener('keydown', function(event) {
                 var upperKey = event.key.toUpperCase();
-                if ((event.ctrlKey || event.metaKey) && event.shiftKey && upperKey === 'Y') {
-                    event.preventDefault();
-                    var previousButton = document.getElementById('previous');
-                    if (previousButton) {
-                        previousButton.click();
+                if ((event.ctrlKey || event.metaKey) && event.shiftKey) {
+                    if (upperKey === 'Y') {
+                        event.preventDefault();
+                        var previousButton = document.getElementById('previous');
+                        if (previousButton) {
+                            previousButton.click();
+                        }
+                    } else if (upperKey === 'U') {
+                        event.preventDefault();
+                        var nextButton = document.getElementById('next');
+                        if (nextButton) {
+                            nextButton.click();
+                        }
                     }
                 }
             });
