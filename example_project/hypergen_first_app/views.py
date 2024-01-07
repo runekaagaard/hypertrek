@@ -54,6 +54,17 @@ def get(request):
     assert cmd == hypertrek.RETRY
     trek_template(trek, state, mission, as_args, as_kwargs, store)
 
+@liveview(path="load/<slug:uuid>/", perm=NO_PERM_REQUIRED, base_template=base_template)
+def load(request, uuid):
+    store = hypertrek.JsonStore(uuid=uuid)
+    hprint(store.uuid)
+    trek = example_trek()
+    state = store.get()
+    state = hypertrek.rewind(trek, state, store=store)
+    cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state, store=store)
+    assert cmd == hypertrek.RETRY
+    trek_template(trek, state, mission, as_args, as_kwargs, store)
+
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
 def post(request, uuid, inpt):
     store = hypertrek.JsonStore(uuid=uuid)

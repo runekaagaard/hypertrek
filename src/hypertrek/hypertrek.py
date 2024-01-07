@@ -64,6 +64,7 @@ def forward(trek, state, store=None):
             state = mark_begin_end(trek, state)
             if store:
                 store.put(state)
+
             return state
 
 def backward(trek, state, store=None):
@@ -74,9 +75,20 @@ def backward(trek, state, store=None):
             state = mark_begin_end(trek, state)
             if store:
                 store.put(state)
+
             return state
 
+def rewind(trek, state, store=None):
+    hypertrek = state["hypertrek"]
+    hypertrek["i"] = 0
+    state = mark_begin_end(trek, state)
+    if store:
+        store.put(state)
+
+    return state
+
 ## Stores ##
+
 class JsonStore:
     def __init__(self, uuid=None, path="/tmp/hypertrek/{uuid}.json"):
         self.uuid = str(uuid4()) if uuid is None else uuid
