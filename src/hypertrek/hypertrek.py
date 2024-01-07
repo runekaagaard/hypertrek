@@ -1,6 +1,11 @@
 d = dict
 
+from hypergen.imports import loads, dumps
+
+import os
+
 from functools import wraps
+from uuid import uuid4
 
 CONTINUE, RETRY, UNDECIDABLE = "CONTINUE", "RETRY", "UNDECIDABLE"
 
@@ -23,37 +28,81 @@ def trek(*, title):
 
     return _
 
-def new_state():
-    return {"hypertrek": {"i": 0, "visited": set(), "at_beginning": True, "at_end": False}}
+## State modifying functions ##
 
-def get(trek, state):
+def new_state(store=None):
+    state = {"hypertrek": {"i": 0, "visited": set(), "at_beginning": True, "at_end": False}}
+    if store:
+        store.put(state)
+    return state
+
+def get(trek, state, store=None):
     hypertrek = state["hypertrek"]
     first = hypertrek["i"] not in hypertrek["visited"]
     hypertrek["visited"].add(hypertrek["i"])
+    result = trek[hypertrek["i"]].execute(state=state, first=first, method="get")
+    if store:
+        store.put(state)
 
-    return trek[hypertrek["i"]].execute(state=state, first=first, method="get")
+    return result
 
-def post(trek, state, inpt):
+def post(trek, state, inpt, store=None):
     hypertrek = state["hypertrek"]
     first = hypertrek["i"] not in hypertrek["visited"]
     hypertrek["visited"].add(hypertrek["i"])
+    result = trek[hypertrek["i"]].execute(state=state, inpt=inpt, first=first, method="post")
+    if store:
+        store.put(state)
 
-    return trek[hypertrek["i"]].execute(state=state, inpt=inpt, first=first, method="post")
+    return result
 
-def forward(trek, state):
+def forward(trek, state, store=None):
     hypertrek = state["hypertrek"]
     while True:
         hypertrek["i"] = min(hypertrek["i"] + 1, len(trek) - 1)
         if hypertrek["i"] == len(trek) - 1 or trek[hypertrek["i"]].is_visible(state):
-            return mark_begin_end(trek, state)
+            state = mark_begin_end(trek, state)
+            if store:
+                store.put(state)
+            return state
 
-def backward(trek, state):
+def backward(trek, state, store=None):
     hypertrek = state["hypertrek"]
-
     while True:
         hypertrek["i"] = max(hypertrek["i"] - 1, 0)
         if hypertrek["i"] == 0 or trek[hypertrek["i"]].is_visible(state):
-            return mark_begin_end(trek, state)
+            state = mark_begin_end(trek, state)
+            if store:
+                store.put(state)
+            return state
+
+## Stores ##
+class JsonStore:
+    def __init__(self, uuid=None, path="/tmp/hypertrek/{uuid}.json"):
+        self.uuid = str(uuid4()) if uuid is None else uuid
+        self.path = path
+
+    def get_path(self):
+        return self.path.format(uuid=self.uuid)
+
+    def ensure_path(self):
+        directory = os.path.dirname(self.get_path())
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+    def get(self):
+        self.ensure_path()
+
+        with open(self.get_path(), "r") as f:
+            return loads(f.read())
+
+    def put(self, state):
+        self.ensure_path()
+
+        with open(self.get_path(), "w") as f:
+            f.write(dumps(state))
+
+## Helpers ##
 
 def progress(trek, state):
     min_, max_, current = 0, 0, 0

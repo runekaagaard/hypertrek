@@ -27,7 +27,7 @@ def base_template():
 
 base_template.target_id = "content"
 
-def trek_template(trek, state, mission, as_args, as_kwargs):
+def trek_template(trek, state, mission, as_args, as_kwargs, store):
     min_, max_, current = hypertrek.progress(trek, state)
     progress(value=current / ((max_+min_) / 2), style=d(width="100%"))
     p("On page ", current, " out of minimum ", min_, " and maximum ", max_, ".")
@@ -35,50 +35,58 @@ def trek_template(trek, state, mission, as_args, as_kwargs):
     inpt = mission.as_hypergen(*as_args, **as_kwargs)
     if not state["hypertrek"]["at_end"]:
         with p():
-            button("Send", id_="commit", onclick=callback(post, state, inpt))
+            button("Send", id_="commit", onclick=callback(post, store.uuid, inpt))
     hprint(state=state)
     with p():
         if not state["hypertrek"]["at_beginning"]:
-            button("<-", id_="previous", onclick=callback(bck, state))
+            button("<-", id_="previous", onclick=callback(bck, store.uuid))
         span(" ")
         if not state["hypertrek"]["at_end"]:
-            button("->", id_="next", onclick=callback(fwd, state, inpt))
+            button("->", id_="next", onclick=callback(fwd, store.uuid, inpt))
 
 @liveview(perm=NO_PERM_REQUIRED, base_template=base_template)
 def get(request):
+    store = hypertrek.JsonStore()
+    hprint(store.uuid)
     trek = example_trek()
-    state = hypertrek.new_state()
-    cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
+    state = hypertrek.new_state(store=store)
+    cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state, store=store)
     assert cmd == hypertrek.RETRY
-    trek_template(trek, state, mission, as_args, as_kwargs)
+    trek_template(trek, state, mission, as_args, as_kwargs, store)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
-def post(request, state, inpt):
+def post(request, uuid, inpt):
+    store = hypertrek.JsonStore(uuid=uuid)
+    state = store.get()
     trek = example_trek()
-    cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
+    cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt, store=store)
     if cmd == hypertrek.CONTINUE:
-        state = hypertrek.forward(trek, state)
-        cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
+        state = hypertrek.forward(trek, state, store=store)
+        cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state, store=store)
 
-    trek_template(trek, state, mission, as_args, as_kwargs)
-
-@action(perm=NO_PERM_REQUIRED, base_template=base_template)
-def bck(request, state):
-    trek = example_trek()
-    state = hypertrek.backward(trek, state)
-    cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
-
-    trek_template(trek, state, mission, as_args, as_kwargs)
+    trek_template(trek, state, mission, as_args, as_kwargs, store)
 
 @action(perm=NO_PERM_REQUIRED, base_template=base_template)
-def fwd(request, state, inpt):
+def bck(request, uuid):
+    store = hypertrek.JsonStore(uuid=uuid)
+    state = store.get()
     trek = example_trek()
-    cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt)
+    state = hypertrek.backward(trek, state, store=store)
+    cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state, store=store)
+
+    trek_template(trek, state, mission, as_args, as_kwargs, store)
+
+@action(perm=NO_PERM_REQUIRED, base_template=base_template)
+def fwd(request, uuid, inpt):
+    store = hypertrek.JsonStore(uuid=uuid)
+    state = store.get()
+    trek = example_trek()
+    cmd, state, mission, (as_args, as_kwargs) = hypertrek.post(trek, state, inpt, store=store)
     if cmd == hypertrek.CONTINUE:
-        state = hypertrek.forward(trek, state)
-        cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state)
+        state = hypertrek.forward(trek, state, store=store)
+        cmd, state, mission, (as_args, as_kwargs) = hypertrek.get(trek, state, store=store)
 
-    trek_template(trek, state, mission, as_args, as_kwargs)
+    trek_template(trek, state, mission, as_args, as_kwargs, store)
 
 # as_html
 

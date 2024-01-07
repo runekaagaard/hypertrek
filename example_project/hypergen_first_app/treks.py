@@ -10,7 +10,7 @@ from hypergen_first_app.forms import ExampleForm, WHO5Form
 def example_trek():
     return [
         template("This is the beginning", "Lets go!"),
-        ms.form.form(ExampleForm, fields=["name", "description"]),
+        ms.form.form(fields=["name", "description"], form_class=ExampleForm),
         ms.form.form(ExampleForm, fields=["options"]),
         booking(),
         template("This is the middle", "Super great!"),

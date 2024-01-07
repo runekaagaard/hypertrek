@@ -1,7 +1,7 @@
 from hypergen.imports import *
 
 # Hypergen python templates
-def form_mission(form, id_="hypertrek_form", *args, **kwargs):
+def form_mission(form_instance, id_="hypertrek_form", *args, **kwargs):
     script("""
                 function formValues(formId) {
                     const form = document.getElementById(formId);
@@ -41,7 +41,7 @@ def form_mission(form, id_="hypertrek_form", *args, **kwargs):
                     return data;
                 }
             """)
-    with form_(id_=id_, js_value_func="formValues") as form_values:
-        raw(form.as_div())
+    with form(id_=id_, js_value_func="formValues") as form_values:
+        raw(form_instance.as_div())
 
     return form_values
