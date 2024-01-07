@@ -25,6 +25,19 @@ def base_template():
             with div(id_="content"):
                 yield
 
+    script("""
+            document.addEventListener('keydown', function(event) {
+                var upperKey = event.key.toUpperCase();
+                if ((event.ctrlKey || event.metaKey) && event.shiftKey && upperKey === 'Y') {
+                    event.preventDefault();
+                    var previousButton = document.getElementById('previous');
+                    if (previousButton) {
+                        previousButton.click();
+                    }
+                }
+            });
+    """)
+
 base_template.target_id = "content"
 
 def trek_template(trek, state, mission, as_args, as_kwargs, store):
@@ -35,7 +48,7 @@ def trek_template(trek, state, mission, as_args, as_kwargs, store):
     inpt = mission.as_hypergen(*as_args, **as_kwargs)
     if not state["hypertrek"]["at_end"]:
         with p():
-            button("Send", id_="commit", onclick=callback(post, store.uuid, inpt))
+            button("Send", id_="commit", onclick=callback(post, store.uuid, inpt), autofocus=True)
     hprint(state=state)
     with p():
         if not state["hypertrek"]["at_beginning"]:

@@ -28,7 +28,7 @@ def trek(*, title):
 
     return _
 
-## State modifying functions ##
+## State modifying operators ##
 
 def new_state(store=None):
     state = {"hypertrek": {"i": 0, "visited": set(), "at_beginning": True, "at_end": False}}
