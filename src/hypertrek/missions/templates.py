@@ -42,6 +42,6 @@ def form_mission(form_instance, id_="hypertrek_form", *args, **kwargs):
                 }
             """)
     with form(id_=id_, js_value_func="formValues") as form_values:
-        raw(form_instance.as_div())
+        raw(str(form_instance))
 
     return form_values

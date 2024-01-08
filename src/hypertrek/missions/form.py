@@ -71,7 +71,7 @@ class form(hypertrek.mission):
         }
 
     def as_html(self, form):
-        return form.as_div()
+        return str(form)
 
     def as_terminal(self, form):
         return prompt_form(form)
