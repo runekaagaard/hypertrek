@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 from hypertrek import hypertrek
 
 def obj_path(obj):
-    return f"{obj.__module__}.{obj.__name__}"
+    return f"{obj.__module__}.{obj.__class__.__name__}"
 
 class Command(BaseCommand):
     help = 'List all registered treks.'

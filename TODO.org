@@ -1,17 +1,16 @@
 * Todos
-** TODO Inbuilt missions will have three rendering concerns:
+** TODO Configuration
+** TODO UI
+** DONE Create these management commands:
+*** DONE hypertrek_list_treks
+*** DONE hypertrek_run_trek TREKNAME
+** DONE Inbuilt missions will have three rendering concerns:
 - terminal
 - hypergen html
 - vanilla django html
 ** DONE Figure out how to pass templates to renderers.
 ** DONE Trek register
-** TODO Create these management commands:
-*** DONE hypertrek_list_treks
-*** TODO hypertrek_run_trek TREKNAME
-*** TODO hypertrek_display_trek TREKNAME
-** TODO Fix terminal mode regressions.
-** TODO Configuration
-** TODO UI
+** DONE Fix terminal mode regressions.
 ** DONE When control flow
 ** DONE Multipage pagenumber ranges
 ** DONE Make multipage for a single mission work.
