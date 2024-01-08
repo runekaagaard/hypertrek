@@ -115,6 +115,21 @@ class JsonStore:
             f.write(dumps(state))
             fcntl.flock(f, fcntl.LOCK_UN)
 
+class ModelStore:
+    def __init__(self, uuid=None):
+        if uuid is None:
+            self.uuid = str(uuid4()) if uuid is None else uuid
+
+    def get(self):
+        from hypertrek.models import TrekState
+        return loads(TrekState.objects.get(uuid=self.uuid).value)
+
+    def put(self, state):
+        from hypertrek.models import TrekState
+        trek_state, _ = TrekState.objects.get_or_create(uuid=self.uuid)
+        trek_state.value = dumps(state)
+        trek_state.save()
+
 ## Helpers ##
 
 def progress(trek, state):
