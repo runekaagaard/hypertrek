@@ -117,8 +117,7 @@ class JsonStore:
 
 class ModelStore:
     def __init__(self, uuid=None):
-        if uuid is None:
-            self.uuid = str(uuid4()) if uuid is None else uuid
+        self.uuid = str(uuid4()) if uuid is None else uuid
 
     def get(self):
         from hypertrek.models import TrekState
